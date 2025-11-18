@@ -1,5 +1,4 @@
 **/node_modules
-**/.yarnrc.yml
 .next
 .cache
 .build
