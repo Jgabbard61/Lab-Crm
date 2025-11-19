@@ -10,15 +10,19 @@ export interface LoginCredentials {
 export async function signIn(credentials: LoginCredentials) {
   try {
     // Since Supabase Auth uses email, we'll need to fetch user by username first
+    // Using ilike for case-insensitive match
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('email')
-      .eq('username', credentials.username)
+      .select('email, username')
+      .ilike('username', credentials.username)
       .single();
     
     if (userError || !userData) {
+      console.error('Username lookup error:', userError);
       throw new Error('Invalid username or password');
     }
+    
+    console.log('Found user email for username:', credentials.username);
     
     // Sign in with email and password
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -26,10 +30,14 @@ export async function signIn(credentials: LoginCredentials) {
       password: credentials.password,
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase auth error:', error);
+      throw error;
+    }
     
     return { success: true, user: data.user };
   } catch (error: any) {
+    console.error('SignIn error:', error);
     return { success: false, error: error?.message || 'Authentication failed' };
   }
 }
