@@ -1,18 +1,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
-import { createPatient } from '@/lib/supabase/queries';
-import { createActivityLog } from '@/lib/supabase/queries';
+import { createServerClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = createServerClient();
     const body = await request.json();
     
     // Get current user session
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
+    
+    if (!userId) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
     
     // Check for existing patient with same last name and DOB
     const { data: existingPatient } = await supabase
@@ -30,16 +37,32 @@ export async function POST(request: NextRequest) {
     }
     
     // Create patient
-    const patient = await createPatient(body, userId);
+    const { data: patient, error: createError } = await supabase
+      .from('patients')
+      .insert([{
+        ...body,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }])
+      .select()
+      .single();
+    
+    if (createError) {
+      console.error('Error creating patient:', createError);
+      throw createError;
+    }
     
     // Log activity
-    await createActivityLog({
-      patient_id: patient?.id,
-      action_type: 'Created',
-      entity_type: 'Patient',
-      changes: { created: body },
-      performed_by: userId,
-    });
+    await supabase
+      .from('activity_logs')
+      .insert([{
+        patient_id: patient?.id,
+        action_type: 'Created',
+        entity_type: 'Patient',
+        changes: { created: body },
+        performed_by: userId,
+        timestamp: new Date().toISOString(),
+      }]);
     
     return NextResponse.json({ success: true, data: patient }, { status: 201 });
   } catch (error: any) {
