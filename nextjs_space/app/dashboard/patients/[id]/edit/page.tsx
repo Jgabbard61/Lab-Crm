@@ -1,9 +1,9 @@
 
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { PatientForm } from '@/components/patient-form';
-import { getPatientById } from '@/lib/supabase/queries';
+import { createServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,15 +12,24 @@ export default async function EditPatientPage({
 }: {
   params: { id: string };
 }) {
-  const session = await getSession();
+  const session = await getServerSession();
   
   if (!session) {
     redirect('/login');
   }
 
+  const supabase = createServerClient();
   let patient = null;
+  
   try {
-    patient = await getPatientById(params?.id);
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('id', params?.id)
+      .single();
+    
+    if (error) throw error;
+    patient = data;
   } catch (error) {
     console.error('Error fetching patient:', error);
   }

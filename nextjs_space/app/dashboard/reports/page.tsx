@@ -1,19 +1,21 @@
 
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { ReportsAnalytics } from '@/components/reports-analytics';
-import { supabase } from '@/lib/supabase/client';
+import { createServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ReportsPage() {
-  const session = await getSession();
+  const session = await getServerSession();
   
   if (!session) {
     redirect('/login');
   }
 
+  const supabase = createServerClient();
+  
   // Fetch analytics data
   let testsData: any[] = [];
   let payersData: Record<string, any> = {};

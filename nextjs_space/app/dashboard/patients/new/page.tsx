@@ -1,13 +1,13 @@
 
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { PatientForm } from '@/components/patient-form';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewPatientPage() {
-  const session = await getSession();
+  const session = await getServerSession();
   
   if (!session) {
     redirect('/login');

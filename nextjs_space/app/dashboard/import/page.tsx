@@ -1,13 +1,13 @@
 
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { ExcelImportComponent } from '@/components/excel-import';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ImportPage() {
-  const session = await getSession();
+  const session = await getServerSession();
   
   if (!session) {
     redirect('/login');

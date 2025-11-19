@@ -2,33 +2,48 @@
 import { redirect } from 'next/navigation';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { PatientTable } from '@/components/patient-table';
-import { getAllPatients, getTestsByPatientId } from '@/lib/supabase/queries';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
+import { createServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const session = await getSession();
+  const session = await getServerSession();
   
   if (!session) {
     redirect('/login');
   }
 
+  const supabase = createServerClient();
   let patients: any[] = [];
+  
   try {
-    patients = await getAllPatients();
+    // Fetch all patients
+    const { data: patientsData, error: patientsError } = await supabase
+      .from('patients')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (patientsError) throw patientsError;
     
     // Fetch tests for each patient
     const patientsWithTests = await Promise.all(
-      patients?.map(async (patient) => {
+      (patientsData ?? []).map(async (patient) => {
         try {
-          const tests = await getTestsByPatientId(patient?.id);
-          return { ...patient, tests };
+          const { data: tests, error: testsError } = await supabase
+            .from('tests')
+            .select('*')
+            .eq('patient_id', patient.id)
+            .order('created_at', { ascending: false });
+          
+          if (testsError) throw testsError;
+          
+          return { ...patient, tests: tests ?? [] };
         } catch (error) {
           console.error(`Error fetching tests for patient ${patient?.id}:`, error);
           return { ...patient, tests: [] };
         }
-      }) ?? []
+      })
     );
     
     patients = patientsWithTests;
