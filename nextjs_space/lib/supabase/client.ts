@@ -1,18 +1,10 @@
 
 // Supabase Client Configuration
-import { createClient } from '@supabase/supabase-js';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+// Create Supabase client with cookie-based session management
+// This ensures the session is available to both client and server (middleware)
+export const supabase = createClientComponentClient();
 
 // Database types (based on schema)
 export interface User {

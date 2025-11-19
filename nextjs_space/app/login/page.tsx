@@ -31,11 +31,9 @@ export default function LoginPage() {
           description: 'Redirecting to dashboard...',
         });
         
-        // Wait a moment for the session to be established, then force a full page reload
-        // This ensures the middleware picks up the new session
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 500);
+        // Cookies are now set immediately, redirect with a full page load
+        // to ensure middleware picks up the new session
+        window.location.href = '/dashboard';
       } else {
         toast({
           title: 'Login failed',

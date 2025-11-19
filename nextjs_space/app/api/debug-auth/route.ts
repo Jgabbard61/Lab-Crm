@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         success: false, 
         step: 'Username lookup',
         error: userError.message,
-        allUsers: users?.map(u => ({ username: u.username, email: u.email })) || []
+        allUsers: users?.map((u: any) => ({ username: u.username, email: u.email })) || []
       });
     }
     
