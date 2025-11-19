@@ -30,14 +30,19 @@ export default function LoginPage() {
           title: 'Login successful',
           description: 'Redirecting to dashboard...',
         });
-        router.push('/dashboard');
-        router.refresh();
+        
+        // Wait a moment for the session to be established, then force a full page reload
+        // This ensures the middleware picks up the new session
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 500);
       } else {
         toast({
           title: 'Login failed',
           description: result.error || 'Invalid credentials',
           variant: 'destructive',
         });
+        setLoading(false);
       }
     } catch (error: any) {
       toast({
@@ -45,7 +50,6 @@ export default function LoginPage() {
         description: error?.message || 'An error occurred',
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };
