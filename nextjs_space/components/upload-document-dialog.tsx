@@ -17,26 +17,19 @@ interface UploadDocumentDialogProps {
   onDocumentAdded: (document: Document) => void;
 }
 
+// Document types match the folder categories
 const DOCUMENT_TYPES = [
-  'Lab Result',
-  'EOB',
-  'Prior Authorization',
-  'Requisition',
-];
-
-const DOCUMENT_CATEGORIES = [
-  'Results',
-  'EOBs',
-  'Denials',
-  'Payments',
-  'Insurance Correspondence',
+  { value: 'Results', label: 'Results', icon: '🧪' },
+  { value: 'EOBs', label: 'EOBs', icon: '💰' },
+  { value: 'Denials', label: 'Denials', icon: '⚠️' },
+  { value: 'Payments', label: 'Payments', icon: '💳' },
+  { value: 'Insurance Correspondence', label: 'Insurance Correspondence', icon: '✉️' },
 ];
 
 export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded }: UploadDocumentDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [documentType, setDocumentType] = useState('');
-  const [documentCategory, setDocumentCategory] = useState('Results');
+  const [documentType, setDocumentType] = useState('Results');
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState('');
 
@@ -49,10 +42,10 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!file || !documentType || !documentCategory) {
+    if (!file || !documentType) {
       toast({
         title: 'Missing information',
-        description: 'Please select a document type, category, and file',
+        description: 'Please select a document type and file',
         variant: 'destructive',
       });
       return;
@@ -66,7 +59,7 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
       formData.append('file', file);
       formData.append('patient_id', patientId);
       formData.append('document_type', documentType);
-      formData.append('document_category', documentCategory);
+      formData.append('document_category', documentType);
 
       const response = await fetch('/api/documents/upload', {
         method: 'POST',
@@ -111,8 +104,7 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
                 
                 // Reset form
                 setFile(null);
-                setDocumentType('');
-                setDocumentCategory('Results');
+                setDocumentType('Results');
                 onClose();
                 return;
               } else if (parsed?.status === 'error') {
@@ -156,35 +148,17 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
               </SelectTrigger>
               <SelectContent>
                 {DOCUMENT_TYPES?.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="document_category">Category *</Label>
-            <Select
-              value={documentCategory}
-              onValueChange={setDocumentCategory}
-              required
-              disabled={loading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {DOCUMENT_CATEGORIES?.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                  <SelectItem key={type.value} value={type.value}>
+                    <span className="flex items-center gap-2">
+                      <span>{type.icon}</span>
+                      <span>{type.label}</span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-gray-500">
-              Choose the appropriate folder for this document
+              Documents will be organized by type
             </p>
           </div>
 
