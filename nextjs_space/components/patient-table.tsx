@@ -67,10 +67,28 @@ export function PatientTable({ patients }: PatientTableProps) {
                 <div className="flex flex-col lg:flex-row gap-6 justify-between">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {patient?.last_name}, {patient?.first_name}
-                        </h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {patient?.last_name}, {patient?.first_name}
+                          </h3>
+                          {patient?.status && (
+                            <Badge
+                              variant={
+                                patient?.status === 'Paid in Full'
+                                  ? 'default'
+                                  : patient?.status === 'Denied'
+                                  ? 'destructive'
+                                  : patient?.status === 'Claim Received' || patient?.status === 'Billed'
+                                  ? 'secondary'
+                                  : 'outline'
+                              }
+                              className="text-xs"
+                            >
+                              {patient?.status}
+                            </Badge>
+                          )}
+                        </div>
                         <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                           {patient?.gender && (
                             <span>{patient?.gender}</span>
@@ -104,10 +122,10 @@ export function PatientTable({ patients }: PatientTableProps) {
                           <span className="font-medium text-gray-900">{patient?.referring_physician}</span>
                         </div>
                       )}
-                      {patient?.clinic_facility && (
+                      {(patient?.reference_laboratory || patient?.clinic_facility) && (
                         <div>
-                          <span className="text-gray-500">Facility:</span>{' '}
-                          <span className="font-medium text-gray-900">{patient?.clinic_facility}</span>
+                          <span className="text-gray-500">Reference Lab:</span>{' '}
+                          <span className="font-medium text-gray-900">{patient?.reference_laboratory || patient?.clinic_facility}</span>
                         </div>
                       )}
                     </div>

@@ -16,7 +16,28 @@ interface PatientOverviewProps {
 export function PatientOverview({ patient }: PatientOverviewProps) {
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <div>
+          {patient?.status && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">Claim Status:</span>
+              <Badge
+                variant={
+                  patient?.status === 'Paid in Full'
+                    ? 'default'
+                    : patient?.status === 'Denied'
+                    ? 'destructive'
+                    : patient?.status === 'Claim Received' || patient?.status === 'Billed'
+                    ? 'secondary'
+                    : 'outline'
+                }
+                className="text-sm px-3 py-1"
+              >
+                {patient?.status}
+              </Badge>
+            </div>
+          )}
+        </div>
         <Link href={`/dashboard/patients/${patient?.id}/edit`}>
           <Button variant="outline" className="flex items-center gap-2">
             <Edit className="h-4 w-4" />
@@ -143,10 +164,10 @@ export function PatientOverview({ patient }: PatientOverviewProps) {
                 <p className="text-base font-medium">{patient?.npi_number}</p>
               </div>
             )}
-            {patient?.clinic_facility && (
+            {(patient?.reference_laboratory || patient?.clinic_facility) && (
               <div>
-                <p className="text-sm text-gray-500">Clinic/Facility</p>
-                <p className="text-base font-medium">{patient?.clinic_facility}</p>
+                <p className="text-sm text-gray-500">Reference Laboratory</p>
+                <p className="text-base font-medium">{patient?.reference_laboratory || patient?.clinic_facility}</p>
               </div>
             )}
             {patient?.sales_rep && (

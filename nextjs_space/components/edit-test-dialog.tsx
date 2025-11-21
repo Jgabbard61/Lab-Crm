@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,11 +11,11 @@ import { Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Test } from '@/lib/supabase/client';
 
-interface AddTestDialogProps {
+interface EditTestDialogProps {
   open: boolean;
   onClose: () => void;
-  patientId: string;
-  onTestAdded: (test: Test) => void;
+  test: Test | null;
+  onTestUpdated: (test: Test) => void;
 }
 
 const TEST_TYPES = [
@@ -30,7 +30,7 @@ const TEST_TYPES = [
   'Neuro',
 ];
 
-export function AddTestDialog({ open, onClose, patientId, onTestAdded }: AddTestDialogProps) {
+export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -51,17 +51,40 @@ export function AddTestDialog({ open, onClose, patientId, onTestAdded }: AddTest
     check_eft_date: '',
   });
 
+  useEffect(() => {
+    if (test) {
+      setFormData({
+        test_type: test.test_type || '',
+        accession_id: test.accession_id || '',
+        date_of_service: test.date_of_service || '',
+        date_reported: (test as any).date_reported || '',
+        result_in_date: test.result_in_date || '',
+        result_fax_date: test.result_fax_date || '',
+        claim_status: test.claim_status || 'Pending',
+        billed_date: test.billed_date || '',
+        claim_number: test.claim_number || '',
+        charges: test.charges?.toString() || '',
+        paid: test.paid?.toString() || '',
+        ded_coins: test.ded_coins?.toString() || '',
+        patient_responsibility: test.patient_responsibility?.toString() || '',
+        check_eft_number: test.check_eft_number || '',
+        check_eft_date: test.check_eft_date || '',
+      });
+    }
+  }, [test]);
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!test) return;
+    
     setLoading(true);
 
     try {
       const payload = {
-        patient_id: patientId,
         test_type: formData?.test_type,
         accession_id: formData?.accession_id || null,
         date_of_service: formData?.date_of_service || null,
@@ -79,48 +102,30 @@ export function AddTestDialog({ open, onClose, patientId, onTestAdded }: AddTest
         check_eft_date: formData?.check_eft_date || null,
       };
 
-      const response = await fetch('/api/tests', {
-        method: 'POST',
+      const response = await fetch(`/api/tests/${test.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (!response?.ok) {
         const error = await response?.json();
-        throw new Error(error?.message || 'Failed to add test');
+        throw new Error(error?.message || 'Failed to update test');
       }
 
       const result = await response?.json();
 
       toast({
-        title: 'Test added',
-        description: 'Test has been added successfully.',
+        title: 'Test updated',
+        description: 'Test has been updated successfully.',
       });
 
-      onTestAdded(result?.data);
-      
-      // Reset form
-      setFormData({
-        test_type: '',
-        accession_id: '',
-        date_of_service: '',
-        date_reported: '',
-        result_in_date: '',
-        result_fax_date: '',
-        claim_status: 'Pending',
-        billed_date: '',
-        claim_number: '',
-        charges: '',
-        paid: '',
-        ded_coins: '',
-        patient_responsibility: '',
-        check_eft_number: '',
-        check_eft_date: '',
-      });
+      onTestUpdated(result?.data);
+      onClose();
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error?.message || 'Failed to add test',
+        description: error?.message || 'Failed to update test',
         variant: 'destructive',
       });
     } finally {
@@ -128,11 +133,13 @@ export function AddTestDialog({ open, onClose, patientId, onTestAdded }: AddTest
     }
   };
 
+  if (!test) return null;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Test</DialogTitle>
+          <DialogTitle>Edit Test</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -283,12 +290,12 @@ export function AddTestDialog({ open, onClose, patientId, onTestAdded }: AddTest
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Adding...
+                  Saving...
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Add Test
+                  Update Test
                 </>
               )}
             </Button>

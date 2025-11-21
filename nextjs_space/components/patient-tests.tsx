@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, DollarSign, Calendar, FileText, Edit } from 'lucide-react';
 import { AddTestDialog } from '@/components/add-test-dialog';
+import { EditTestDialog } from '@/components/edit-test-dialog';
 import { format } from 'date-fns';
 
 interface PatientTestsProps {
@@ -18,10 +19,19 @@ interface PatientTestsProps {
 
 export function PatientTests({ patientId, tests, onTestsUpdate }: PatientTestsProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editingTest, setEditingTest] = useState<Test | null>(null);
 
   const handleTestAdded = (newTest: Test) => {
     onTestsUpdate([newTest, ...tests]);
     setShowAddDialog(false);
+  };
+
+  const handleTestUpdated = (updatedTest: Test) => {
+    const updatedTests = tests.map(test => 
+      test.id === updatedTest.id ? updatedTest : test
+    );
+    onTestsUpdate(updatedTests);
+    setEditingTest(null);
   };
 
   return (
@@ -62,7 +72,7 @@ export function PatientTests({ patientId, tests, onTestsUpdate }: PatientTestsPr
             <Card key={test?.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-xl">{test?.test_type}</CardTitle>
                     {test?.accession_id && (
                       <p className="text-sm text-gray-500 mt-1">
@@ -70,27 +80,45 @@ export function PatientTests({ patientId, tests, onTestsUpdate }: PatientTestsPr
                       </p>
                     )}
                   </div>
-                  <Badge
-                    variant={
-                      test?.claim_status === 'Finalized'
-                        ? 'default'
-                        : test?.claim_status === 'Denied'
-                        ? 'destructive'
-                        : 'secondary'
-                    }
-                  >
-                    {test?.claim_status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        test?.claim_status === 'Finalized'
+                          ? 'default'
+                          : test?.claim_status === 'Denied'
+                          ? 'destructive'
+                          : 'secondary'
+                      }
+                    >
+                      {test?.claim_status}
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingTest(test)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {test?.date_of_service && (
                     <div>
-                      <p className="text-sm text-gray-500">Date of Service</p>
+                      <p className="text-sm text-gray-500">Date of Service (Collection)</p>
                       <p className="text-base font-medium flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-gray-400" />
                         {format(new Date(test?.date_of_service), 'MM/dd/yyyy')}
+                      </p>
+                    </div>
+                  )}
+                  {(test as any)?.date_reported && (
+                    <div>
+                      <p className="text-sm text-gray-500">Date Reported</p>
+                      <p className="text-base font-medium flex items-center gap-1">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        {format(new Date((test as any).date_reported), 'MM/dd/yyyy')}
                       </p>
                     </div>
                   )}
@@ -145,6 +173,13 @@ export function PatientTests({ patientId, tests, onTestsUpdate }: PatientTestsPr
         onClose={() => setShowAddDialog(false)}
         patientId={patientId}
         onTestAdded={handleTestAdded}
+      />
+
+      <EditTestDialog
+        open={!!editingTest}
+        onClose={() => setEditingTest(null)}
+        test={editingTest}
+        onTestUpdated={handleTestUpdated}
       />
     </div>
   );

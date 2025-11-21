@@ -30,11 +30,13 @@ export interface Patient {
   icd10_codes?: string[];
   referring_physician?: string;
   npi_number?: string;
-  clinic_facility?: string;
+  reference_laboratory?: string;
+  clinic_facility?: string; // Deprecated, use reference_laboratory
   sales_rep?: string;
   fax?: string;
   comments?: string;
   jg_comments?: string;
+  status?: 'Claim Pending' | 'Billed' | 'Claim Received' | 'Paid in Full' | 'Partial Payment' | 'Denied';
   created_at: string;
   updated_at: string;
   created_by?: string;
@@ -47,6 +49,7 @@ export interface Test {
   test_type: string;
   accession_id?: string;
   date_of_service?: string;
+  date_reported?: string;
   result_in_date?: string;
   result_fax_date?: string;
   claim_status: 'Pending' | 'Finalized' | 'Denied';
@@ -82,6 +85,7 @@ export interface Document {
   patient_id: string;
   test_id?: string;
   document_type: string;
+  document_category?: 'Results' | 'EOBs' | 'Denials' | 'Payments' | 'Insurance Correspondence';
   file_name: string;
   file_path: string;
   file_size?: number;

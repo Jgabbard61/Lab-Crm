@@ -35,11 +35,12 @@ export function PatientForm({ patient, isEdit }: PatientFormProps) {
     icd10_codes: patient?.icd10_codes?.join(', ') || '',
     referring_physician: patient?.referring_physician || '',
     npi_number: patient?.npi_number || '',
-    clinic_facility: patient?.clinic_facility || '',
+    reference_laboratory: (patient as any)?.reference_laboratory || (patient as any)?.clinic_facility || '',
     sales_rep: patient?.sales_rep || '',
     fax: patient?.fax || '',
     comments: patient?.comments || '',
     jg_comments: patient?.jg_comments || '',
+    status: (patient as any)?.status || 'Claim Pending',
   });
 
   const handleChange = (field: string, value: string) => {
@@ -143,16 +144,58 @@ export function PatientForm({ patient, isEdit }: PatientFormProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="date_of_birth">Date of Birth *</Label>
+              <Label htmlFor="date_of_birth">Date of Birth * (YYYY-MM-DD)</Label>
               <Input
                 id="date_of_birth"
-                type="date"
+                type="text"
+                placeholder="YYYY-MM-DD"
+                pattern="\d{4}-\d{2}-\d{2}"
                 value={formData?.date_of_birth}
                 onChange={(e) => handleChange('date_of_birth', e.target.value)}
+                onPaste={(e) => {
+                  // Allow paste and handle date formatting
+                  const pastedText = e.clipboardData.getData('text');
+                  // Auto-format common date patterns to YYYY-MM-DD
+                  const dateFormats = [
+                    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, // MM/DD/YYYY or M/D/YYYY
+                    /^(\d{4})-(\d{1,2})-(\d{1,2})$/, // YYYY-MM-DD or YYYY-M-D
+                  ];
+                  for (const format of dateFormats) {
+                    const match = pastedText.match(format);
+                    if (match) {
+                      if (format.source.includes('\\/')) {
+                        // MM/DD/YYYY format
+                        const [, month, day, year] = match;
+                        const formatted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                        e.preventDefault();
+                        handleChange('date_of_birth', formatted);
+                      }
+                      break;
+                    }
+                  }
+                }}
                 required
                 disabled={loading}
               />
             </div>
+          </div>
+
+          {/* Status Field */}
+          <div className="space-y-2">
+            <Label htmlFor="status">Claim Status</Label>
+            <Select value={formData?.status} onValueChange={(value) => handleChange('status', value)} disabled={loading}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Claim Pending">Claim Pending</SelectItem>
+                <SelectItem value="Billed">Billed</SelectItem>
+                <SelectItem value="Claim Received">Claim Received</SelectItem>
+                <SelectItem value="Paid in Full">Paid in Full</SelectItem>
+                <SelectItem value="Partial Payment">Partial Payment</SelectItem>
+                <SelectItem value="Denied">Denied</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -239,11 +282,11 @@ export function PatientForm({ patient, isEdit }: PatientFormProps) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="clinic_facility">Clinic/Facility</Label>
+                <Label htmlFor="reference_laboratory">Reference Laboratory</Label>
                 <Input
-                  id="clinic_facility"
-                  value={formData?.clinic_facility}
-                  onChange={(e) => handleChange('clinic_facility', e.target.value)}
+                  id="reference_laboratory"
+                  value={formData?.reference_laboratory}
+                  onChange={(e) => handleChange('reference_laboratory', e.target.value)}
                   disabled={loading}
                 />
               </div>
