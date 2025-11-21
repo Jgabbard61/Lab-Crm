@@ -24,10 +24,19 @@ const DOCUMENT_TYPES = [
   'Requisition',
 ];
 
+const DOCUMENT_CATEGORIES = [
+  'Results',
+  'EOBs',
+  'Denials',
+  'Payments',
+  'Insurance Correspondence',
+];
+
 export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded }: UploadDocumentDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [documentType, setDocumentType] = useState('');
+  const [documentCategory, setDocumentCategory] = useState('Results');
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState('');
 
@@ -40,10 +49,10 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!file || !documentType) {
+    if (!file || !documentType || !documentCategory) {
       toast({
         title: 'Missing information',
-        description: 'Please select a document type and file',
+        description: 'Please select a document type, category, and file',
         variant: 'destructive',
       });
       return;
@@ -57,6 +66,7 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
       formData.append('file', file);
       formData.append('patient_id', patientId);
       formData.append('document_type', documentType);
+      formData.append('document_category', documentCategory);
 
       const response = await fetch('/api/documents/upload', {
         method: 'POST',
@@ -102,6 +112,7 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
                 // Reset form
                 setFile(null);
                 setDocumentType('');
+                setDocumentCategory('Results');
                 onClose();
                 return;
               } else if (parsed?.status === 'error') {
@@ -151,6 +162,30 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="document_category">Category *</Label>
+            <Select
+              value={documentCategory}
+              onValueChange={setDocumentCategory}
+              required
+              disabled={loading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {DOCUMENT_CATEGORIES?.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500">
+              Choose the appropriate folder for this document
+            </p>
           </div>
 
           <div className="space-y-2">

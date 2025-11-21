@@ -17,6 +17,9 @@ export async function POST(request: NextRequest) {
         const file = formData.get('file') as File;
         const patientId = formData.get('patient_id') as string;
         const documentType = formData.get('document_type') as string;
+        const documentCategoryValue = formData.get('document_category') as string;
+        const documentCategory: 'Results' | 'EOBs' | 'Denials' | 'Payments' | 'Insurance Correspondence' = 
+          (documentCategoryValue as any) || 'Results';
 
         if (!file || !patientId || !documentType) {
           throw new Error('Missing required fields');
@@ -55,6 +58,7 @@ export async function POST(request: NextRequest) {
         const document = await createDocument({
           patient_id: patientId,
           document_type: documentType,
+          document_category: documentCategory,
           file_name: file.name,
           file_path: filePath,
           file_size: file.size,
@@ -62,6 +66,25 @@ export async function POST(request: NextRequest) {
           extracted_data: extractedData,
           uploaded_by: userId,
         });
+
+        // Log the activity
+        try {
+          await supabase.from('activity_logs').insert({
+            patient_id: patientId,
+            action_type: 'Document Uploaded',
+            entity_type: 'Document',
+            changes: {
+              document_type: documentType,
+              document_category: documentCategory,
+              file_name: file.name,
+              file_size: file.size
+            },
+            performed_by: userId,
+          });
+        } catch (logError) {
+          console.error('Error logging activity:', logError);
+          // Continue even if logging fails
+        }
 
         // Send completion
         controller.enqueue(

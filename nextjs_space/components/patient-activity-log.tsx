@@ -50,6 +50,114 @@ export function PatientActivityLog({ activityLogs }: PatientActivityLogProps) {
     }
   };
 
+  const renderChangeSummary = (log: ActivityLogEntry) => {
+    const { action_type, entity_type, changes } = log;
+
+    if (action_type === 'Created') {
+      if (entity_type === 'Patient') {
+        return (
+          <p className="text-sm text-gray-700 mt-2">
+            Created new patient: <span className="font-medium">{changes?.created?.first_name} {changes?.created?.last_name}</span>
+          </p>
+        );
+      } else if (entity_type === 'Test') {
+        return (
+          <p className="text-sm text-gray-700 mt-2">
+            Added new test: <span className="font-medium">{changes?.created?.test_type}</span>
+          </p>
+        );
+      }
+    }
+
+    if (action_type === 'Updated') {
+      if (entity_type === 'Patient' && changes?.before && changes?.after) {
+        const changedFields: string[] = [];
+        const before = changes.before;
+        const after = changes.after;
+        
+        // Check for important field changes
+        if (before.status !== after.status) {
+          changedFields.push(`Status: ${before.status || 'None'} → ${after.status}`);
+        }
+        if (before.insurance_payer !== after.insurance_payer) {
+          changedFields.push(`Insurance: ${before.insurance_payer || 'None'} → ${after.insurance_payer}`);
+        }
+        if (before.medicare_id !== after.medicare_id) {
+          changedFields.push(`Medicare ID: ${before.medicare_id || 'None'} → ${after.medicare_id}`);
+        }
+        if (before.referring_physician !== after.referring_physician) {
+          changedFields.push(`Physician: ${before.referring_physician || 'None'} → ${after.referring_physician}`);
+        }
+        if (before.reference_laboratory !== after.reference_laboratory) {
+          changedFields.push(`Reference Lab: ${before.reference_laboratory || 'None'} → ${after.reference_laboratory}`);
+        }
+
+        if (changedFields.length > 0) {
+          return (
+            <div className="text-sm text-gray-700 mt-2 space-y-1">
+              <p className="font-medium">Changed fields:</p>
+              <ul className="list-disc list-inside ml-2">
+                {changedFields.map((change, i) => (
+                  <li key={i}>{change}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+      } else if (entity_type === 'Test' && changes?.before && changes?.after) {
+        const changedFields: string[] = [];
+        const before = changes.before;
+        const after = changes.after;
+        
+        if (before.claim_status !== after.claim_status) {
+          changedFields.push(`Status: ${before.claim_status} → ${after.claim_status}`);
+        }
+        if (before.date_reported !== after.date_reported) {
+          changedFields.push(`Date Reported: ${before.date_reported || 'None'} → ${after.date_reported || 'None'}`);
+        }
+        if (before.charges !== after.charges) {
+          changedFields.push(`Charges: $${before.charges || 0} → $${after.charges || 0}`);
+        }
+        if (before.paid !== after.paid) {
+          changedFields.push(`Paid: $${before.paid || 0} → $${after.paid || 0}`);
+        }
+
+        if (changedFields.length > 0) {
+          return (
+            <div className="text-sm text-gray-700 mt-2 space-y-1">
+              <p className="font-medium">Test: {before.test_type}</p>
+              <ul className="list-disc list-inside ml-2">
+                {changedFields.map((change, i) => (
+                  <li key={i}>{change}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+      }
+    }
+
+    if (action_type === 'Document Uploaded' && changes) {
+      return (
+        <p className="text-sm text-gray-700 mt-2">
+          Uploaded <span className="font-medium">{changes.file_name}</span> to{' '}
+          <Badge variant="secondary" className="ml-1">{changes.document_category}</Badge>
+          {' '}({(changes.file_size / 1024).toFixed(1)} KB)
+        </p>
+      );
+    }
+
+    if (action_type === 'Deleted') {
+      return (
+        <p className="text-sm text-gray-700 mt-2">
+          Deleted {entity_type.toLowerCase()}
+        </p>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -96,13 +204,17 @@ export function PatientActivityLog({ activityLogs }: PatientActivityLogProps) {
                       )}
                     </div>
 
+                    {/* Human-readable summary */}
+                    {renderChangeSummary(log)}
+
+                    {/* Raw details (collapsed by default) */}
                     {log?.changes && (
                       <details className="mt-3">
                         <summary className="text-sm font-medium text-teal-600 cursor-pointer hover:text-teal-700">
-                          View Details
+                          View Raw Data
                         </summary>
                         <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                          <pre className="text-xs text-gray-700 whitespace-pre-wrap overflow-auto">
+                          <pre className="text-xs text-gray-700 whitespace-pre-wrap overflow-auto max-h-60">
                             {JSON.stringify(log?.changes, null, 2)}
                           </pre>
                         </div>
