@@ -174,15 +174,6 @@ export function PatientDocuments({ patientId, documents, onDocumentsUpdate }: Pa
                       </div>
                     </div>
                   </div>
-                  
-                  {document?.extracted_data && (
-                    <div className="mt-3 p-3 bg-teal-50 rounded-lg">
-                      <p className="text-sm font-medium text-teal-800 mb-1">Extracted Data:</p>
-                      <pre className="text-xs text-teal-700 whitespace-pre-wrap">
-                        {JSON.stringify(document?.extracted_data, null, 2)}
-                      </pre>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="flex items-center gap-2 ml-4">
