@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileText, Download, Trash2, Loader2, Folder } from 'lucide-react';
+import { Upload, FileText, Download, Trash2, Loader2, Folder, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { UploadDocumentDialog } from '@/components/upload-document-dialog';
@@ -85,6 +85,31 @@ export function PatientDocuments({ patientId, documents, onDocumentsUpdate }: Pa
       toast({
         title: 'Download failed',
         description: error?.message || 'Failed to download document',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleView = async (document: Document) => {
+    try {
+      // Get signed URL for viewing
+      const response = await fetch(`/api/documents/${document?.id}/download`);
+      
+      if (!response?.ok) throw new Error('Failed to get document URL');
+      
+      const { url } = await response?.json();
+      
+      // Open in new tab
+      window.open(url, '_blank');
+      
+      toast({
+        title: 'Opening document',
+        description: 'Document is opening in a new tab.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Failed to open document',
+        description: error?.message || 'Could not open document',
         variant: 'destructive',
       });
     }
@@ -180,7 +205,16 @@ export function PatientDocuments({ patientId, documents, onDocumentsUpdate }: Pa
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => handleView(document)}
+                    title="View PDF"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleDownload(document)}
+                    title="Download PDF"
                   >
                     <Download className="h-4 w-4" />
                   </Button>
@@ -190,6 +224,7 @@ export function PatientDocuments({ patientId, documents, onDocumentsUpdate }: Pa
                     onClick={() => handleDelete(document?.id)}
                     disabled={deletingId === document?.id}
                     className="text-red-600 hover:text-red-700"
+                    title="Delete PDF"
                   >
                     {deletingId === document?.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
