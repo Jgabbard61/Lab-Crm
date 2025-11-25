@@ -89,29 +89,35 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
         for (const line of lines) {
           if (line?.startsWith('data: ')) {
             const data = line?.slice(6);
+            
+            // Try to parse JSON, skip if invalid
+            let parsed;
             try {
-              const parsed = JSON.parse(data);
-              
-              if (parsed?.status === 'processing') {
-                setProgress(parsed?.message || 'Processing...');
-              } else if (parsed?.status === 'completed') {
-                onDocumentAdded(parsed?.document);
-                
-                toast({
-                  title: 'Document uploaded',
-                  description: 'Document has been uploaded successfully.',
-                });
-                
-                // Reset form
-                setFile(null);
-                setDocumentType('Results');
-                onClose();
-                return;
-              } else if (parsed?.status === 'error') {
-                throw new Error(parsed?.message || 'Upload failed');
-              }
+              parsed = JSON.parse(data);
             } catch (e) {
-              // Skip invalid JSON
+              // Skip invalid JSON lines
+              continue;
+            }
+            
+            // Handle parsed status
+            if (parsed?.status === 'processing') {
+              setProgress(parsed?.message || 'Processing...');
+            } else if (parsed?.status === 'completed') {
+              onDocumentAdded(parsed?.document);
+              
+              toast({
+                title: 'Document uploaded',
+                description: 'Document has been uploaded successfully.',
+              });
+              
+              // Reset form
+              setFile(null);
+              setDocumentType('Results');
+              onClose();
+              return;
+            } else if (parsed?.status === 'error') {
+              // Throw error to be caught by outer catch block
+              throw new Error(parsed?.message || 'Upload failed');
             }
           }
         }
