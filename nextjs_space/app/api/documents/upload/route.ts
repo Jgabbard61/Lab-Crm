@@ -6,32 +6,37 @@ import { uploadDocument } from '@/lib/supabase/storage';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  // Create server-side Supabase client OUTSIDE the stream to ensure cookie access
+  const supabase = createServerClient();
+  
+  // Get current user session BEFORE starting the stream
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError) {
+    console.error('[Document Upload] Session error:', sessionError);
+    return new Response(
+      JSON.stringify({ error: `Authentication error: ${sessionError.message}` }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+  
+  if (!session) {
+    console.error('[Document Upload] No session found');
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized - Please log in again' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+  
+  const userId = session.user.id;
+  console.log('[Document Upload] User authenticated:', userId);
+  
   const encoder = new TextEncoder();
   
   const stream = new ReadableStream({
     async start(controller) {
       try {
         console.log('[Document Upload] Starting upload process');
-        
-        // Create server-side Supabase client
-        const supabase = createServerClient();
-        
-        // Get current user session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('[Document Upload] Session error:', sessionError);
-          throw new Error(`Authentication error: ${sessionError.message}`);
-        }
-        
-        if (!session) {
-          console.error('[Document Upload] No session found');
-          throw new Error('Unauthorized - Please log in again');
-        }
-        
-        const userId = session.user.id;
-        console.log('[Document Upload] User authenticated:', userId);
-        
         // Parse form data
         const formData = await request.formData();
         const file = formData.get('file') as File;
