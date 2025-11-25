@@ -1,6 +1,7 @@
 
 // Supabase Storage Helpers for Document Management
 import { supabase } from './client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const BUCKET_NAME = 'patient-documents';
 
@@ -8,15 +9,25 @@ const BUCKET_NAME = 'patient-documents';
 // STORAGE UPLOAD/DOWNLOAD/DELETE
 // =====================================================
 
+/**
+ * Upload a document to Supabase Storage
+ * @param file - File to upload
+ * @param patientId - Patient ID for folder organization
+ * @param documentType - Document type for categorization
+ * @param authenticatedClient - Optional authenticated Supabase client (required for server-side uploads)
+ */
 export async function uploadDocument(
   file: File,
   patientId: string,
-  documentType: string
+  documentType: string,
+  authenticatedClient?: SupabaseClient
 ): Promise<{ path: string; url: string }> {
+  const client = authenticatedClient || supabase;
+  
   const fileExt = file.name.split('.').pop();
   const fileName = `${patientId}/${documentType}/${Date.now()}.${fileExt}`;
   
-  const { data, error } = await supabase.storage
+  const { data, error } = await client.storage
     .from(BUCKET_NAME)
     .upload(fileName, file, {
       cacheControl: '3600',
@@ -26,7 +37,7 @@ export async function uploadDocument(
   if (error) throw error;
   
   // Get public URL (or signed URL for private buckets)
-  const { data: urlData } = supabase.storage
+  const { data: urlData } = client.storage
     .from(BUCKET_NAME)
     .getPublicUrl(data.path);
   

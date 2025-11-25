@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
 
         console.log('[Document Upload] Uploading file to storage...');
         
-        // Upload file to Supabase storage
-        const { path: filePath, url: fileUrl } = await uploadDocument(file, patientId, documentType);
+        // Upload file to Supabase storage using authenticated server client
+        const { path: filePath, url: fileUrl } = await uploadDocument(file, patientId, documentType, supabase);
         
         console.log('[Document Upload] File uploaded to storage:', filePath);
 
