@@ -26,7 +26,35 @@
 3. Copy and paste the entire contents of `supabase/schema.sql` (see below)
 4. Click "Run" to execute the schema
 
-## Step 4: Configure Storage Buckets
+## Step 4: Run Database Migrations (CRITICAL for Document Upload)
+
+**IMPORTANT**: You must run these migrations for document upload to work!
+
+### Migration 1: Schema Enhancements (if not already run)
+1. In your Supabase dashboard, go to **SQL Editor**
+2. Create a new query
+3. Copy and paste the entire contents of `supabase/migration_20251121_enhancements.sql`
+4. Click "Run" to execute
+
+### Migration 2: Documents Table RLS Policies (REQUIRED)
+1. In your Supabase dashboard, go to **SQL Editor**
+2. Create a new query
+3. Copy and paste the entire contents of `supabase/migration_20251125_documents_rls.sql`
+4. Click "Run" to execute
+
+**What this migration does:**
+- Enables Row Level Security (RLS) on the `documents` table
+- Creates 4 policies allowing authenticated users to:
+  - INSERT documents (upload)
+  - SELECT documents (view)
+  - UPDATE documents (edit metadata)
+  - DELETE documents (remove)
+
+**Troubleshooting:**
+- If you get "policy already exists" error, that's OK - it means the policies are already in place
+- If you get "permission denied" error, make sure you're logged in as the Supabase project owner
+
+## Step 5: Configure Storage Buckets
 
 1. In your Supabase dashboard, go to **Storage**
 2. Create these buckets:
@@ -63,7 +91,9 @@
    USING (bucket_id = 'patient-documents');
    ```
 
-## Step 5: Create Admin User
+**Note:** Both the documents TABLE policies (Step 4) AND the storage.objects policies (Step 5) are required for document upload to work properly!
+
+## Step 6: Create Admin User
 
 1. In Supabase dashboard, go to **Authentication** → **Users**
 2. Click "Add user"
@@ -81,7 +111,7 @@
    ('00000000-0000-0000-0000-000000000000', 'john@doe.com', 'john@doe.com', 'admin', 'John Doe');
    ```
 
-## Step 6: Environment Variables
+## Step 7: Environment Variables
 
 Create/update `.env.local` file in your project root with:
 
@@ -98,7 +128,7 @@ NEXTAUTH_SECRET=your_nextauth_secret
 ABACUSAI_API_KEY=your_abacus_api_key
 ```
 
-## Step 7: Vercel Deployment
+## Step 8: Vercel Deployment
 
 ### Prepare GitHub Repository
 
