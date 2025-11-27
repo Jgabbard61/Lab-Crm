@@ -24,6 +24,7 @@ const DOCUMENT_TYPES = [
   { value: 'Denials', label: 'Denials', icon: '⚠️' },
   { value: 'Payments', label: 'Payments', icon: '💳' },
   { value: 'Insurance Correspondence', label: 'Insurance Correspondence', icon: '✉️' },
+  { value: 'Requisitions', label: 'Requisitions', icon: '📋' },
 ];
 
 export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded }: UploadDocumentDialogProps) {

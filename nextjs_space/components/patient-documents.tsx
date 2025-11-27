@@ -25,6 +25,7 @@ const DOCUMENT_CATEGORIES = [
   { value: 'Denials', label: 'Denials', icon: '⚠️' },
   { value: 'Payments', label: 'Payments', icon: '💳' },
   { value: 'Insurance Correspondence', label: 'Insurance Correspondence', icon: '✉️' },
+  { value: 'Requisitions', label: 'Requisitions', icon: '📋' },
 ];
 
 export function PatientDocuments({ patientId, documents, onDocumentsUpdate }: PatientDocumentsProps) {
@@ -42,6 +43,7 @@ export function PatientDocuments({ patientId, documents, onDocumentsUpdate }: Pa
       Denials: [],
       Payments: [],
       'Insurance Correspondence': [],
+      Requisitions: [],
     };
 
     documents.forEach(doc => {
