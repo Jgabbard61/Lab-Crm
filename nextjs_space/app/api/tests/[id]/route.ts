@@ -51,6 +51,20 @@ export async function PUT(
         patient_responsibility: body.patient_responsibility,
         check_eft_number: body.check_eft_number,
         check_eft_date: body.check_eft_date,
+        // Kit Shipment fields
+        kit_shipped_date: body.kit_shipped_date,
+        kit_shipment_tracking: body.kit_shipment_tracking,
+        kit_return_tracking: body.kit_return_tracking,
+        kit_received_date: body.kit_received_date,
+        kit_shipment_status: body.kit_shipment_status,
+        // Accessioning fields
+        accessioning_status: body.accessioning_status,
+        accessioning_date: body.accessioning_date,
+        accessioning_notes: body.accessioning_notes,
+        // Lab Processing fields
+        sent_to_lab_date: body.sent_to_lab_date,
+        results_received_date: body.results_received_date,
+        // System fields
         updated_at: new Date().toISOString(),
         updated_by: session.user.id,
       })
