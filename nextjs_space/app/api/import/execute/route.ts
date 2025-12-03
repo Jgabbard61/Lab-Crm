@@ -49,8 +49,13 @@ const HEADER_MAPPING: Record<string, string> = {
   // Kit Tracking (NEW - from your tracking sheet)
   'kit shipment tracking id': 'kit_shipment_tracking',
   'kit shipment tracking': 'kit_shipment_tracking',
+  'shipment tracking id': 'kit_shipment_tracking',
+  'ship to tracking': 'kit_shipment_tracking',
   'pt kit return tracking id': 'kit_return_tracking',
+  'kit return tracking id': 'kit_return_tracking',
   'kit return tracking': 'kit_return_tracking',
+  'return tracking id': 'kit_return_tracking',
+  'ship from tracking': 'kit_return_tracking',
   'kit received date': 'kit_received_date',
   'kit return status': 'accessioning_status',
   'entered date': 'kit_shipped_date',
