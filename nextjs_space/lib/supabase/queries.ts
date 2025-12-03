@@ -1,13 +1,15 @@
 
 // Supabase Database Query Helpers
 import { supabase, Patient, Test, Document, ActivityLog } from './client';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // =====================================================
 // PATIENT QUERIES
 // =====================================================
 
-export async function getAllPatients() {
-  const { data, error } = await supabase
+export async function getAllPatients(client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('patients')
     .select('*')
     .order('created_at', { ascending: false });
@@ -16,8 +18,9 @@ export async function getAllPatients() {
   return data as Patient[];
 }
 
-export async function getPatientById(patientId: string) {
-  const { data, error } = await supabase
+export async function getPatientById(patientId: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('patients')
     .select('*')
     .eq('id', patientId)
@@ -27,8 +30,9 @@ export async function getPatientById(patientId: string) {
   return data as Patient;
 }
 
-export async function searchPatientsByLastName(lastName: string) {
-  const { data, error } = await supabase
+export async function searchPatientsByLastName(lastName: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('patients')
     .select('*')
     .ilike('last_name', `%${lastName}%`)
@@ -38,8 +42,9 @@ export async function searchPatientsByLastName(lastName: string) {
   return data as Patient[];
 }
 
-export async function findPatientByNameAndDOB(lastName: string, dateOfBirth: string) {
-  const { data, error } = await supabase
+export async function findPatientByNameAndDOB(lastName: string, dateOfBirth: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('patients')
     .select('*')
     .ilike('last_name', lastName)
@@ -50,8 +55,9 @@ export async function findPatientByNameAndDOB(lastName: string, dateOfBirth: str
   return data as Patient | null;
 }
 
-export async function createPatient(patient: Partial<Patient>, userId?: string) {
-  const { data, error } = await supabase
+export async function createPatient(patient: Partial<Patient>, userId?: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('patients')
     .insert({
       ...patient,
@@ -65,8 +71,9 @@ export async function createPatient(patient: Partial<Patient>, userId?: string) 
   return data as Patient;
 }
 
-export async function updatePatient(patientId: string, updates: Partial<Patient>, userId?: string) {
-  const { data, error } = await supabase
+export async function updatePatient(patientId: string, updates: Partial<Patient>, userId?: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('patients')
     .update({
       ...updates,
@@ -80,8 +87,9 @@ export async function updatePatient(patientId: string, updates: Partial<Patient>
   return data as Patient;
 }
 
-export async function deletePatient(patientId: string) {
-  const { error } = await supabase
+export async function deletePatient(patientId: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { error } = await db
     .from('patients')
     .delete()
     .eq('id', patientId);
@@ -94,8 +102,9 @@ export async function deletePatient(patientId: string) {
 // TEST/CLAIM QUERIES
 // =====================================================
 
-export async function getTestsByPatientId(patientId: string) {
-  const { data, error } = await supabase
+export async function getTestsByPatientId(patientId: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('tests')
     .select('*')
     .eq('patient_id', patientId)
@@ -105,8 +114,9 @@ export async function getTestsByPatientId(patientId: string) {
   return data as Test[];
 }
 
-export async function getTestById(testId: string) {
-  const { data, error } = await supabase
+export async function getTestById(testId: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('tests')
     .select('*')
     .eq('id', testId)
@@ -116,8 +126,9 @@ export async function getTestById(testId: string) {
   return data as Test;
 }
 
-export async function createTest(test: Partial<Test>, userId?: string) {
-  const { data, error } = await supabase
+export async function createTest(test: Partial<Test>, userId?: string, client?: SupabaseClient) {
+  const db = client || supabase;
+  const { data, error } = await db
     .from('tests')
     .insert({
       ...test,

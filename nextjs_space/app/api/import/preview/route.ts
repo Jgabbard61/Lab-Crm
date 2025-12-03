@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
+import { createServerClient } from '@/lib/supabase/server';
 import { findPatientByNameAndDOB } from '@/lib/supabase/queries';
 
 export const dynamic = 'force-dynamic';
@@ -123,6 +124,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create authenticated Supabase client
+    const supabase = createServerClient();
+    
+    // Get current user session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in.' },
+        { status: 401 }
+      );
+    }
+
     // Read Excel file
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer);
@@ -166,7 +180,8 @@ export async function POST(request: NextRequest) {
           if (mappedRow?.last_name && mappedRow?.date_of_birth) {
             const existingPatient = await findPatientByNameAndDOB(
               mappedRow?.last_name,
-              mappedRow?.date_of_birth
+              mappedRow?.date_of_birth,
+              supabase
             );
 
             if (existingPatient) {

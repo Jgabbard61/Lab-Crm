@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
-import { supabase } from '@/lib/supabase/client';
+import { createServerClient } from '@/lib/supabase/server';
 import { 
   findPatientByNameAndDOB,
   createPatient,
@@ -129,9 +129,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create authenticated Supabase client
+    const supabase = createServerClient();
+    
     // Get current user session
     const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in.' },
+        { status: 401 }
+      );
+    }
+    
+    const userId = session.user.id;
 
     // Read Excel file
     const arrayBuffer = await file.arrayBuffer();
@@ -200,7 +211,8 @@ export async function POST(request: NextRequest) {
         // Find or create patient
         let patient = await findPatientByNameAndDOB(
           mappedRow?.last_name,
-          mappedRow?.date_of_birth
+          mappedRow?.date_of_birth,
+          supabase
         );
 
         const patientData: any = {
@@ -223,7 +235,7 @@ export async function POST(request: NextRequest) {
 
         if (!patient) {
           // Create new patient
-          patient = await createPatient(patientData, userId);
+          patient = await createPatient(patientData, userId, supabase);
         } else {
           // Update existing patient with non-empty values
           const updates: any = {};
@@ -235,7 +247,7 @@ export async function POST(request: NextRequest) {
           });
           
           if (Object.keys(updates ?? {})?.length > 0) {
-            patient = await updatePatient(patient?.id, updates, userId);
+            patient = await updatePatient(patient?.id, updates, userId, supabase);
           }
         }
 
@@ -273,7 +285,7 @@ export async function POST(request: NextRequest) {
               correction_requests: mappedRow?.correction_requests,
             };
 
-            await createTest(testData, userId);
+            await createTest(testData, userId, supabase);
           }
         }
 
