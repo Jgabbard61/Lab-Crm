@@ -40,6 +40,8 @@ export function PatientForm({ patient, isEdit }: PatientFormProps) {
     fax: patient?.fax || '',
     comments: patient?.comments || '',
     jg_comments: patient?.jg_comments || '',
+    personal_history: patient?.personal_history || '',
+    family_history: patient?.family_history || '',
     status: (patient as any)?.status || 'Claim Pending',
   });
 
@@ -245,15 +247,39 @@ export function PatientForm({ patient, isEdit }: PatientFormProps) {
           {/* Medical Information */}
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">Medical Information</h3>
-            <div className="space-y-2">
-              <Label htmlFor="icd10_codes">ICD-10 Codes (comma-separated)</Label>
-              <Input
-                id="icd10_codes"
-                value={formData?.icd10_codes}
-                onChange={(e) => handleChange('icd10_codes', e.target.value)}
-                placeholder="e.g., A01.0, B02.9, C50.911"
-                disabled={loading}
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="icd10_codes">ICD-10 Codes (comma-separated)</Label>
+                <Input
+                  id="icd10_codes"
+                  value={formData?.icd10_codes}
+                  onChange={(e) => handleChange('icd10_codes', e.target.value)}
+                  placeholder="e.g., A01.0, B02.9, C50.911"
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="personal_history">Personal History</Label>
+                <Textarea
+                  id="personal_history"
+                  value={formData?.personal_history || ''}
+                  onChange={(e) => handleChange('personal_history', e.target.value)}
+                  placeholder="Enter patient's personal medical history..."
+                  rows={3}
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="family_history">Family History</Label>
+                <Textarea
+                  id="family_history"
+                  value={formData?.family_history || ''}
+                  onChange={(e) => handleChange('family_history', e.target.value)}
+                  placeholder="Enter patient's family medical history..."
+                  rows={3}
+                  disabled={loading}
+                />
+              </div>
             </div>
           </div>
 

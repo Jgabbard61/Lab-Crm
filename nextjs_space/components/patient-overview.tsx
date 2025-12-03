@@ -120,7 +120,7 @@ export function PatientOverview({ patient }: PatientOverviewProps) {
         </Card>
 
         {/* Medical Information */}
-        {patient?.icd10_codes && patient?.icd10_codes?.length > 0 && (
+        {((patient?.icd10_codes && patient?.icd10_codes?.length > 0) || patient?.personal_history || patient?.family_history) && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -129,16 +129,30 @@ export function PatientOverview({ patient }: PatientOverviewProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500 mb-2">ICD-10 Codes</p>
-                <div className="flex flex-wrap gap-2">
-                  {patient?.icd10_codes?.map((code, index) => (
-                    <Badge key={index} variant="secondary">
-                      {code}
-                    </Badge>
-                  ))}
+              {patient?.icd10_codes && patient?.icd10_codes?.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">ICD-10 Codes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {patient?.icd10_codes?.map((code, index) => (
+                      <Badge key={index} variant="secondary">
+                        {code}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+              {patient?.personal_history && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Personal History</p>
+                  <p className="text-base font-medium whitespace-pre-wrap">{patient?.personal_history}</p>
+                </div>
+              )}
+              {patient?.family_history && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Family History</p>
+                  <p className="text-base font-medium whitespace-pre-wrap">{patient?.family_history}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

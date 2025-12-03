@@ -193,6 +193,13 @@ export async function POST(request: NextRequest) {
         if (mappedRow?.payment_date) {
           mappedRow.payment_date = parseExcelDate(mappedRow?.payment_date);
         }
+        // Parse kit tracking dates
+        if (mappedRow?.kit_shipped_date) {
+          mappedRow.kit_shipped_date = parseExcelDate(mappedRow?.kit_shipped_date);
+        }
+        if (mappedRow?.kit_received_date) {
+          mappedRow.kit_received_date = parseExcelDate(mappedRow?.kit_received_date);
+        }
 
         // Parse ICD-10 codes (split by comma)
         if (mappedRow?.icd10_codes) {
@@ -231,6 +238,8 @@ export async function POST(request: NextRequest) {
           fax: mappedRow?.fax,
           comments: mappedRow?.comments,
           jg_comments: mappedRow?.jg_comments,
+          personal_history: mappedRow?.personal_history,
+          family_history: mappedRow?.family_history,
         };
 
         if (!patient) {
@@ -262,6 +271,18 @@ export async function POST(request: NextRequest) {
             .maybeSingle();
 
           if (!existingTest) {
+            // Auto-set accessioning status based on claim status
+            // If already "Sent to lab" or "Resulted on", accessioning must have been accepted
+            const claimStatus = mappedRow?.claim_status?.toLowerCase() || '';
+            let accessioningStatus = mappedRow?.accessioning_status || 'Pending';
+            let accessioningDate = null;
+            
+            if (claimStatus.includes('resulted on') || claimStatus.includes('sent to lab')) {
+              accessioningStatus = 'Accepted';
+              // Use date_of_service as fallback for accessioning date if not provided
+              accessioningDate = mappedRow?.date_of_service || null;
+            }
+
             const testData: any = {
               patient_id: patient?.id,
               test_type: mappedRow?.test_type,
@@ -270,6 +291,24 @@ export async function POST(request: NextRequest) {
               result_in_date: mappedRow?.result_in_date,
               result_fax_date: mappedRow?.result_fax_date,
               claim_status: mappedRow?.claim_status || 'Pending',
+              
+              // Kit Shipment & Tracking
+              kit_shipped_date: mappedRow?.kit_shipped_date,
+              kit_shipment_tracking: mappedRow?.kit_shipment_tracking,
+              kit_return_tracking: mappedRow?.kit_return_tracking,
+              kit_received_date: mappedRow?.kit_received_date,
+              kit_shipment_status: mappedRow?.kit_shipment_status || 'Pending',
+              
+              // Accessioning / QC
+              accessioning_status: accessioningStatus,
+              accessioning_date: accessioningDate,
+              accessioning_notes: mappedRow?.accessioning_notes,
+              
+              // Lab Processing
+              sent_to_lab_date: claimStatus.includes('sent to lab') ? mappedRow?.date_of_service : null,
+              results_received_date: claimStatus.includes('resulted on') ? mappedRow?.result_in_date : null,
+              
+              // Billing
               billed_date: mappedRow?.billed_date,
               claim_number: mappedRow?.claim_number,
               charges: mappedRow?.charges ? parseFloat(mappedRow?.charges) : undefined,
