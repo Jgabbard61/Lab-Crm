@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ interface AddTestDialogProps {
 
 export function AddTestDialog({ open, onClose, patientId, onTestAdded }: AddTestDialogProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   
   // Core fields only - details can be added via Edit
@@ -66,6 +68,9 @@ export function AddTestDialog({ open, onClose, patientId, onTestAdded }: AddTest
         title: 'Test created',
         description: 'Test has been added successfully. Click Edit to add more details.',
       });
+      
+      // Refresh the page data to show new test
+      router.refresh();
       
       // Reset form
       setTestType('');

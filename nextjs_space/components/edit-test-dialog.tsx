@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ interface EditTestDialogProps {
 
 export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestDialogProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   
   // Core fields
@@ -137,6 +139,9 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
         title: 'Test updated',
         description: 'Changes have been saved successfully.',
       });
+      
+      // Refresh the page data to show updated values
+      router.refresh();
       
       onClose();
     } catch (error: any) {
