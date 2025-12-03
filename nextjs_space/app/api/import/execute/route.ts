@@ -7,6 +7,7 @@ import {
   createPatient,
   updatePatient,
   createTest,
+  updateTest,
 } from '@/lib/supabase/queries';
 
 export const dynamic = 'force-dynamic';
@@ -233,12 +234,17 @@ export async function POST(request: NextRequest) {
           gender: mappedRow?.gender,
           date_of_birth: mappedRow?.date_of_birth,
           address: mappedRow?.address,
+          phone: mappedRow?.phone,
+          city: mappedRow?.city,
+          state: mappedRow?.state,
+          zip: mappedRow?.zip,
+          ethnicity: mappedRow?.ethnicity,
           insurance_payer: mappedRow?.insurance_payer,
           policy_number: mappedRow?.policy_number,
           icd10_codes: mappedRow?.icd10_codes,
           referring_physician: mappedRow?.referring_physician,
           npi_number: mappedRow?.npi_number,
-          clinic_facility: mappedRow?.clinic_facility,
+          reference_laboratory: mappedRow?.reference_laboratory,
           sales_rep: mappedRow?.sales_rep,
           fax: mappedRow?.fax,
           comments: mappedRow?.comments,
@@ -265,7 +271,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Create test if test data exists
+        // Create or update test if test data exists
         if (mappedRow?.test_type && patient?.id) {
           // Check if test already exists for this patient
           const { data: existingTest } = await supabase
@@ -275,61 +281,93 @@ export async function POST(request: NextRequest) {
             .eq('test_type', mappedRow?.test_type)
             .maybeSingle();
 
-          if (!existingTest) {
-            // Auto-set accessioning status based on claim status
-            // If already "Sent to lab" or "Resulted on", accessioning must have been accepted
-            const claimStatus = mappedRow?.claim_status?.toLowerCase() || '';
-            let accessioningStatus = mappedRow?.accessioning_status || 'Pending';
-            let accessioningDate = null;
+          // Auto-set accessioning status based on claim status
+          // If already "Sent to lab" or "Resulted on", accessioning must have been accepted
+          const claimStatus = mappedRow?.claim_status?.toLowerCase() || '';
+          let accessioningStatus = mappedRow?.accessioning_status || 'Pending';
+          let accessioningDate = null;
+          
+          if (claimStatus.includes('resulted on') || claimStatus.includes('sent to lab')) {
+            accessioningStatus = 'Accepted';
+            // Use date_of_service as fallback for accessioning date if not provided
+            accessioningDate = mappedRow?.date_of_service || null;
+          }
+
+          const testData: any = {
+            patient_id: patient?.id,
+            test_type: mappedRow?.test_type,
+            accession_id: mappedRow?.accession_id,
+            date_of_service: mappedRow?.date_of_service,
+            result_in_date: mappedRow?.result_in_date,
+            result_fax_date: mappedRow?.result_fax_date,
+            claim_status: mappedRow?.claim_status || 'Pending',
             
-            if (claimStatus.includes('resulted on') || claimStatus.includes('sent to lab')) {
-              accessioningStatus = 'Accepted';
-              // Use date_of_service as fallback for accessioning date if not provided
-              accessioningDate = mappedRow?.date_of_service || null;
-            }
+            // Kit Shipment & Tracking
+            kit_shipped_date: mappedRow?.kit_shipped_date,
+            kit_shipment_tracking: mappedRow?.kit_shipment_tracking,
+            kit_return_tracking: mappedRow?.kit_return_tracking,
+            kit_received_date: mappedRow?.kit_received_date,
+            kit_shipment_status: mappedRow?.kit_shipment_status || 'Pending',
+            
+            // Accessioning / QC
+            accessioning_status: accessioningStatus,
+            accessioning_date: accessioningDate,
+            accessioning_notes: mappedRow?.accessioning_notes,
+            
+            // Lab Processing
+            sent_to_lab_date: claimStatus.includes('sent to lab') ? mappedRow?.date_of_service : null,
+            results_received_date: claimStatus.includes('resulted on') ? mappedRow?.result_in_date : null,
+            
+            // Billing
+            billed_date: mappedRow?.billed_date,
+            claim_number: mappedRow?.claim_number,
+            charges: mappedRow?.charges ? parseFloat(mappedRow?.charges) : undefined,
+            paid: mappedRow?.paid ? parseFloat(mappedRow?.paid) : undefined,
+            ded_coins: mappedRow?.ded_coins ? parseFloat(mappedRow?.ded_coins) : undefined,
+            patient_responsibility: mappedRow?.patient_responsibility ? parseFloat(mappedRow?.patient_responsibility) : undefined,
+            check_eft_number: mappedRow?.check_eft_number,
+            check_eft_date: mappedRow?.check_eft_date,
+            payment_number: mappedRow?.payment_number,
+            payment_date: mappedRow?.payment_date,
+            deductible: mappedRow?.deductible ? parseFloat(mappedRow?.deductible) : undefined,
+            mr: mappedRow?.mr,
+            correction_requests: mappedRow?.correction_requests,
+          };
 
-            const testData: any = {
-              patient_id: patient?.id,
-              test_type: mappedRow?.test_type,
-              accession_id: mappedRow?.accession_id,
-              date_of_service: mappedRow?.date_of_service,
-              result_in_date: mappedRow?.result_in_date,
-              result_fax_date: mappedRow?.result_fax_date,
-              claim_status: mappedRow?.claim_status || 'Pending',
-              
-              // Kit Shipment & Tracking
-              kit_shipped_date: mappedRow?.kit_shipped_date,
-              kit_shipment_tracking: mappedRow?.kit_shipment_tracking,
-              kit_return_tracking: mappedRow?.kit_return_tracking,
-              kit_received_date: mappedRow?.kit_received_date,
-              kit_shipment_status: mappedRow?.kit_shipment_status || 'Pending',
-              
-              // Accessioning / QC
-              accessioning_status: accessioningStatus,
-              accessioning_date: accessioningDate,
-              accessioning_notes: mappedRow?.accessioning_notes,
-              
-              // Lab Processing
-              sent_to_lab_date: claimStatus.includes('sent to lab') ? mappedRow?.date_of_service : null,
-              results_received_date: claimStatus.includes('resulted on') ? mappedRow?.result_in_date : null,
-              
-              // Billing
-              billed_date: mappedRow?.billed_date,
-              claim_number: mappedRow?.claim_number,
-              charges: mappedRow?.charges ? parseFloat(mappedRow?.charges) : undefined,
-              paid: mappedRow?.paid ? parseFloat(mappedRow?.paid) : undefined,
-              ded_coins: mappedRow?.ded_coins ? parseFloat(mappedRow?.ded_coins) : undefined,
-              patient_responsibility: mappedRow?.patient_responsibility ? parseFloat(mappedRow?.patient_responsibility) : undefined,
-              check_eft_number: mappedRow?.check_eft_number,
-              check_eft_date: mappedRow?.check_eft_date,
-              payment_number: mappedRow?.payment_number,
-              payment_date: mappedRow?.payment_date,
-              deductible: mappedRow?.deductible ? parseFloat(mappedRow?.deductible) : undefined,
-              mr: mappedRow?.mr,
-              correction_requests: mappedRow?.correction_requests,
-            };
-
+          if (!existingTest) {
+            // Create new test
             await createTest(testData, userId, supabase);
+          } else {
+            // Update existing test with non-empty values
+            const testUpdates: any = {};
+            Object.keys(testData ?? {})?.forEach((key) => {
+              if (key === 'patient_id') return; // Skip patient_id
+              
+              const testKey = key as keyof typeof existingTest;
+              const newValue = testData?.[key];
+              const oldValue = existingTest?.[testKey];
+              
+              // Update if:
+              // 1. New value exists (not null/undefined/empty)
+              // 2. Old value is empty/null OR we want to override
+              if (newValue !== undefined && newValue !== null && newValue !== '' &&
+                  (!oldValue || oldValue === null || oldValue === '')) {
+                testUpdates[key] = newValue;
+              }
+            });
+            
+            if (Object.keys(testUpdates ?? {})?.length > 0) {
+              await updateTest(existingTest?.id, testUpdates, userId, supabase);
+              
+              // Log activity
+              await supabase.from('activity_logs').insert({
+                action: 'Updated',
+                entity_type: 'Test',
+                entity_id: existingTest?.id,
+                changes: testUpdates,
+                performed_by: userId,
+              });
+            }
           }
         }
 

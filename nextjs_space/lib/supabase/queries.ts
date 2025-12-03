@@ -142,8 +142,9 @@ export async function createTest(test: Partial<Test>, userId?: string, client?: 
   return data as Test;
 }
 
-export async function updateTest(testId: string, updates: Partial<Test>, userId?: string) {
-  const { data, error } = await supabase
+export async function updateTest(testId: string, updates: Partial<Test>, userId?: string, client?: any) {
+  const db = client || supabase;
+  const { data, error} = await db
     .from('tests')
     .update({
       ...updates,
