@@ -24,9 +24,14 @@ export interface Patient {
   gender?: string;
   date_of_birth: string;
   address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone?: string;
   medicare_id?: string;
   insurance_payer?: string;
   policy_number?: string;
+  ethnicity?: string;
   icd10_codes?: string[];
   referring_physician?: string;
   npi_number?: string;

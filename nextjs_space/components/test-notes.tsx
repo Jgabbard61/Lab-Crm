@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TestNote } from '@/lib/supabase/client';
+import { TestNote, supabase } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertCircle, Plus, Trash2, Loader2, User, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { useSession } from 'next-auth/react';
 
 interface TestNotesProps {
   testId: string;
@@ -20,7 +19,7 @@ interface TestNotesProps {
 
 export function TestNotes({ testId, patientId }: TestNotesProps) {
   const { toast } = useToast();
-  const { data: session } = useSession() || {};
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [notes, setNotes] = useState<TestNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -28,6 +27,23 @@ export function TestNotes({ testId, patientId }: TestNotesProps) {
   const [newPriority, setNewPriority] = useState<'Low' | 'High'>('Low');
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Fetch current user
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Get additional user data from users table
+        const { data: userData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        setCurrentUser(userData || user);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   // Fetch notes
   useEffect(() => {
@@ -75,7 +91,7 @@ export function TestNotes({ testId, patientId }: TestNotesProps) {
           patient_id: patientId,
           note: newNote,
           priority: newPriority,
-          created_by: session?.user?.email || session?.user?.name || 'Unknown',
+          created_by: currentUser?.email || currentUser?.username || 'Unknown',
         }),
       });
 

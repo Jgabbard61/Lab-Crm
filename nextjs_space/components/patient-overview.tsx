@@ -77,13 +77,39 @@ export function PatientOverview({ patient }: PatientOverviewProps) {
                 </p>
               </div>
             )}
-            {patient?.address && (
+            {(patient?.address || patient?.city || patient?.state || patient?.zip) && (
               <div>
                 <p className="text-sm text-gray-500">Address</p>
-                <p className="text-base font-medium flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  {patient?.address}
+                <p className="text-base font-medium flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-gray-400 mt-1" />
+                  <span className="flex flex-col">
+                    {patient?.address && <span>{patient.address}</span>}
+                    {(patient?.city || patient?.state || patient?.zip) && (
+                      <span>
+                        {patient?.city && patient.city}
+                        {patient?.city && (patient?.state || patient?.zip) && ', '}
+                        {patient?.state && patient.state}
+                        {patient?.state && patient?.zip && ' '}
+                        {patient?.zip && patient.zip}
+                      </span>
+                    )}
+                  </span>
                 </p>
+              </div>
+            )}
+            {patient?.phone && (
+              <div>
+                <p className="text-sm text-gray-500">Phone</p>
+                <p className="text-base font-medium flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  {patient?.phone}
+                </p>
+              </div>
+            )}
+            {patient?.ethnicity && (
+              <div>
+                <p className="text-sm text-gray-500">Ethnicity</p>
+                <p className="text-base font-medium">{patient?.ethnicity}</p>
               </div>
             )}
           </CardContent>

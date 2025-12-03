@@ -29,6 +29,11 @@ export function PatientForm({ patient, isEdit }: PatientFormProps) {
     gender: patient?.gender || '',
     date_of_birth: patient?.date_of_birth || '',
     address: patient?.address || '',
+    city: patient?.city || '',
+    state: patient?.state || '',
+    zip: patient?.zip || '',
+    phone: patient?.phone || '',
+    ethnicity: patient?.ethnicity || '',
     medicare_id: patient?.medicare_id || '',
     insurance_payer: patient?.insurance_payer || '',
     policy_number: patient?.policy_number || '',
@@ -200,14 +205,78 @@ export function PatientForm({ patient, isEdit }: PatientFormProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Input
-              id="address"
-              value={formData?.address}
-              onChange={(e) => handleChange('address', e.target.value)}
-              disabled={loading}
-            />
+          {/* Address Information */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4">Address & Contact</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="address">Street Address</Label>
+                <Input
+                  id="address"
+                  value={formData?.address}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  disabled={loading}
+                  placeholder="123 Main St"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={formData?.city}
+                    onChange={(e) => handleChange('city', e.target.value)}
+                    disabled={loading}
+                    placeholder="Los Angeles"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    value={formData?.state}
+                    onChange={(e) => handleChange('state', e.target.value)}
+                    disabled={loading}
+                    placeholder="CA"
+                    maxLength={2}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zip">ZIP Code</Label>
+                  <Input
+                    id="zip"
+                    value={formData?.zip}
+                    onChange={(e) => handleChange('zip', e.target.value)}
+                    disabled={loading}
+                    placeholder="90001"
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData?.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    disabled={loading}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ethnicity">Ethnicity</Label>
+                  <Input
+                    id="ethnicity"
+                    value={formData?.ethnicity}
+                    onChange={(e) => handleChange('ethnicity', e.target.value)}
+                    disabled={loading}
+                    placeholder="e.g., Hispanic, Caucasian, Asian"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Insurance Information */}
