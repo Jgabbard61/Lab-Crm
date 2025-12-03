@@ -12,25 +12,97 @@ import {
 export const dynamic = 'force-dynamic';
 
 const HEADER_MAPPING: Record<string, string> = {
+  // Accession ID (multiple variations)
   'accession': 'accession_id',
-  'claim status': 'claim_status',
-  'test/modality': 'test_type',
-  'dos(collection)': 'date_of_service',
+  
+  // Patient Name Fields
   'first name': 'first_name',
+  'first': 'first_name',
   'last name': 'last_name',
-  'gender': 'gender',
+  'last': 'last_name',
+  
+  // Date of Birth (multiple variations)
   'date of birth': 'date_of_birth',
+  'dob': 'date_of_birth',
+  
+  // Gender
+  'gender': 'gender',
+  
+  // Contact Info
   'address': 'address',
+  'phone': 'phone',
+  'city': 'city',
+  'state': 'state',
+  'zip': 'zip',
+  'fax': 'fax',
+  
+  // Test Information
+  'test/modality': 'test_type',
+  'test name': 'test_type',
+  'claim status': 'claim_status',
+  'test result status': 'claim_status',
+  
+  // Dates - Date of Service
+  'dos(collection)': 'date_of_service',
+  'dos': 'date_of_service',
+  
+  // Kit Tracking (NEW - from your tracking sheet)
+  'kit shipment tracking id': 'kit_shipment_tracking',
+  'kit shipment tracking': 'kit_shipment_tracking',
+  'pt kit return tracking id': 'kit_return_tracking',
+  'kit return tracking': 'kit_return_tracking',
+  'kit received date': 'kit_received_date',
+  'kit return status': 'accessioning_status',
+  'entered date': 'kit_shipped_date',
+  
+  // Accessioning/QC
+  'comments / rejection reason': 'accessioning_notes',
+  'rejection reason': 'accessioning_notes',
+  
+  // ICD Codes
   'icd-10 code': 'icd10_codes',
+  'icd codes': 'icd10_codes',
+  'icd10': 'icd10_codes',
+  
+  // Result Dates
   'result-in date': 'result_in_date',
   'result fax date': 'result_fax_date',
+  
+  // Physician Information
   'ref physician': 'referring_physician',
+  'ref provider': 'referring_physician',
   'npi#': 'npi_number',
+  'npi': 'npi_number',
+  
+  // Facility/Lab
   'clinic/facility/ref lab': 'clinic_facility',
+  'reference lab': 'reference_laboratory',
+  
+  // Sales Rep
   'sales rep': 'sales_rep',
+  
+  // Insurance
   'insurance': 'insurance_payer',
+  'insurance name': 'insurance_payer',
+  'primary insurance name': 'insurance_payer',
   'policy': 'policy_number',
+  'member id': 'policy_number',
+  
+  // Medical History
+  'personal history': 'personal_history',
+  'family history': 'family_history',
+  'ethnicity': 'ethnicity',
+  
+  // Comments & Notes
   'comments': 'comments',
+  'notes': 'comments',
+  'chartnotes': 'comments',
+  'pa notes': 'comments',
+  'fedex notes': 'comments',
+  'jg comments': 'jg_comments',
+  'mr': 'mr',
+  
+  // Billing Information
   'billed date': 'billed_date',
   'claim': 'claim_number',
   'charges': 'charges',
@@ -39,13 +111,10 @@ const HEADER_MAPPING: Record<string, string> = {
   'patient responsibility': 'patient_responsibility',
   'check/eft#': 'check_eft_number',
   'check/eft date': 'check_eft_date',
-  'jg comments': 'jg_comments',
-  'mr': 'mr',
   'payment #': 'payment_number',
   'payment date': 'payment_date',
-  'correction/requests': 'correction_requests',
   'deductible': 'deductible',
-  'fax': 'fax',
+  'correction/requests': 'correction_requests',
 };
 
 export async function POST(request: NextRequest) {
