@@ -41,6 +41,7 @@ export interface Patient {
   fax?: string;
   comments?: string;
   jg_comments?: string;
+  mr?: string;
   personal_history?: string;
   family_history?: string;
   status?: 'Claim Pending' | 'Billed' | 'Claim Received' | 'Paid in Full' | 'Partial Payment' | 'Denied';

@@ -249,6 +249,7 @@ export async function POST(request: NextRequest) {
           fax: mappedRow?.fax,
           comments: mappedRow?.comments,
           jg_comments: mappedRow?.jg_comments,
+          mr: mappedRow?.mr,
           personal_history: mappedRow?.personal_history,
           family_history: mappedRow?.family_history,
         };
