@@ -1,106 +1,155 @@
-# Fix Excel Import RLS Error
+# Excel Import Field Mapping Fix
 
-## Problem
-When trying to import patient data from Excel, you're getting these errors:
-```
-Row 2: new row violates row-level security policy for table "patients"
-Row 3: new row violates row-level security policy for table "patients"
-...
-```
+## Issue
+The Excel import was failing with RLS policy errors because several patient fields referenced in the import code were missing from the database schema:
+- `ethnicity`
+- `jg_comments` (JG-specific comments)
+- `mr` (Medical Record field)
 
-## Solution
-You need to enable Row Level Security (RLS) policies on the `patients` and `tests` tables to allow authenticated users to insert, update, and delete records.
+## What Was Fixed
 
-## Step-by-Step Instructions
+### 1. Database Migration Created
+Created `supabase/migration_20251203_missing_patient_fields.sql` to add the missing columns to the `patients` table.
+
+### 2. TypeScript Types Updated
+Updated the `Patient` interface in `/lib/supabase/client.ts` to include:
+- `mr?: string` - Medical Record reference field
+
+(Note: `ethnicity` and `jg_comments` were already in the interface)
+
+### 3. Import Logic Updated
+Updated `/api/import/execute/route.ts` to include the `mr` field in the `patientData` object that gets saved during import.
+
+## Action Required: Run Database Migration
+
+You need to run the migration in your Supabase SQL Editor:
 
 ### Step 1: Open Supabase SQL Editor
-1. Go to your Supabase Dashboard: https://app.supabase.com
-2. Select your project
-3. Click on **SQL Editor** in the left sidebar
-4. Click **New query** button
+1. Go to your Supabase project dashboard
+2. Navigate to **SQL Editor** in the left sidebar
+3. Click **New Query**
 
-### Step 2: Run the Migration Script
-1. Open the file: `supabase/migration_20251203_patients_tests_rls.sql`
-2. Copy **ALL** the content from that file
-3. Paste it into the SQL Editor
-4. Click **Run** button (or press Cmd+Enter / Ctrl+Enter)
-
-### Step 3: Verify the Migration
-After running the migration, verify it worked by running this query in the SQL Editor:
+### Step 2: Run the Migration
+Copy and paste the following SQL into the editor and click **Run**:
 
 ```sql
--- Check if RLS is enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
-WHERE schemaname = 'public' 
-  AND tablename IN ('patients', 'tests', 'activity_logs');
+-- Add missing patient fields
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS ethnicity TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS jg_comments TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS mr TEXT;
 
--- Check policies
-SELECT tablename, policyname, cmd, roles 
-FROM pg_policies 
-WHERE tablename IN ('patients', 'tests', 'activity_logs') 
-ORDER BY tablename, cmd;
+-- Add comments for documentation
+COMMENT ON COLUMN patients.ethnicity IS 'Patient ethnicity/race';
+COMMENT ON COLUMN patients.jg_comments IS 'JG-specific comments and notes';
+COMMENT ON COLUMN patients.mr IS 'Medical record reference field';
+
+-- Create indexes for commonly queried fields
+CREATE INDEX IF NOT EXISTS idx_patients_ethnicity ON patients(ethnicity);
 ```
 
-**Expected Result:**
-- All three tables should show `rowsecurity = true`
-- You should see 4 policies for `patients` (INSERT, SELECT, UPDATE, DELETE)
-- You should see 4 policies for `tests` (INSERT, SELECT, UPDATE, DELETE)
-- You should see 2 policies for `activity_logs` (INSERT, SELECT)
+### Step 3: Verify the Migration
+Run this verification query to confirm all fields were added:
 
-### Step 4: Test the Import
-1. Go back to your CRM application
-2. Navigate to the **Import** page
-3. Try importing your Excel file again
-4. The import should now work without RLS errors!
+```sql
+SELECT column_name, data_type, is_nullable 
+FROM information_schema.columns 
+WHERE table_name = 'patients' 
+  AND column_name IN ('ethnicity', 'jg_comments', 'mr', 'city', 'state', 'zip', 'phone')
+ORDER BY column_name;
+```
 
-## What This Migration Does
+**Expected Result:** You should see all 7 fields listed with `data_type = 'text'` and `is_nullable = 'YES'`.
 
-This migration enables Row Level Security and creates policies that allow authenticated users to:
+## Complete Excel Header Mapping
 
-### For `patients` table:
-- ✅ INSERT new patient records (needed for Excel import)
-- ✅ SELECT/view existing patients
-- ✅ UPDATE patient information
-- ✅ DELETE patient records
+After running the migration, the import system will now support ALL of the following Excel headers:
 
-### For `tests` table:
-- ✅ INSERT new test records (needed for Excel import)
-- ✅ SELECT/view existing tests
-- ✅ UPDATE test information
-- ✅ DELETE test records
+### Patient Information
+- First Name / First
+- Last Name / Last
+- Date of Birth / DOB
+- Gender
+- **Ethnicity** ✓ (newly added)
+- Phone
+- Address
+- City
+- State
+- Zip
+- Fax
 
-### For `activity_logs` table:
-- ✅ INSERT activity log entries
-- ✅ SELECT/view activity logs
+### Medical Information
+- ICD-10 Code / ICD Codes / ICD10
+- Personal History
+- Family History
+- **MR** ✓ (newly added)
+
+### Provider/Facility
+- Ref Physician / Ref Provider
+- NPI# / NPI
+- Clinic/Facility/Ref Lab
+- Reference Lab
+- Sales Rep
+
+### Insurance
+- Insurance / Insurance Name / Primary Insurance Name
+- Policy / Member ID
+
+### Test Information
+- Accession
+- Test/Modality / Test Name
+- Claim Status / Test Result Status
+- DOS(Collection) / DOS
+
+### Shipping & Tracking
+- Kit Shipment Tracking ID / Ship To Tracking
+- Pt Kit Return Tracking ID / Ship From Tracking
+- Kit Received Date
+- Entered Date (maps to Kit Shipped Date)
+- Kit Return Status
+
+### Comments & Notes
+- Comments / Notes / ChartNotes / PA Notes / FedEx Notes
+- **JG Comments** ✓ (newly added)
+- Comments / Rejection Reason
+
+### Dates
+- Result-In Date
+- Result Fax Date
+- Billed Date
+- Check/EFT Date
+- Payment Date
+
+### Billing
+- Claim
+- Charges
+- Paid
+- Ded/Coins
+- Patient Responsibility
+- Check/EFT#
+- Payment #
+- Deductible
+- Correction/Requests
 
 ## Troubleshooting
 
-### Error: "policy already exists"
-This means you've already run this migration or a similar one. You can safely ignore this error, or modify the migration to only create the missing policies.
+### Error: "column already exists"
+This is safe to ignore - it means the field was already in your database.
 
 ### Error: "permission denied"
-Make sure you're logged in as the Supabase project owner or have admin access.
+Make sure you're logged into Supabase as the project owner or have admin permissions.
 
-### Import still fails after migration
-1. Make sure you're logged into the CRM app (check the top right corner)
-2. Try logging out and logging back in
-3. Clear your browser cache
-4. Check the browser console for additional error messages
+### Import Still Failing After Migration
+1. Refresh your browser to clear any cached API responses
+2. Try the import again
+3. Check the browser console (F12) for any new error messages
 
-### Error: "duplicate key value violates unique constraint"
-This means a patient with the same Last Name + Date of Birth already exists. The import will skip these rows automatically.
+## Next Steps
 
-## Important Notes
+Once the migration is complete:
+1. The deployed app will immediately work with the new fields
+2. You can import Excel files with any combination of the headers listed above
+3. All patient data fields will be properly mapped and stored
 
-- ✅ **This migration is safe** - it only adds security policies, it doesn't modify or delete any data
-- ✅ **Run it only once** - if you run it multiple times, you'll get "policy already exists" errors (which are harmless)
-- ✅ **Immediate effect** - changes take effect immediately, no app redeployment needed
-- ✅ **Required for Excel import** - without these policies, you won't be able to import patients from Excel
+---
 
-## Next Steps After Migration
-
-1. ✅ Test patient import functionality
-2. ✅ Verify that existing patients are still visible
-3. ✅ Try creating a new patient manually to confirm everything works
-4. ✅ Check that activity logs are being recorded properly
+**Note:** This migration is **safe** and **idempotent**. Running it multiple times will not cause any issues or data loss.
