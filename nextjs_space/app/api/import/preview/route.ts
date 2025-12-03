@@ -176,6 +176,7 @@ export async function POST(request: NextRequest) {
           // Check if patient exists (match by last name + DOB)
           let matchStatus: 'new' | 'existing' | 'update' = 'new';
           let patientName = `${mappedRow?.first_name || ''} ${mappedRow?.last_name || ''}`.trim();
+          let fieldUpdates: Array<{field: string, oldValue: any, newValue: any, willUpdate: boolean}> = [];
 
           if (mappedRow?.last_name && mappedRow?.date_of_birth) {
             const existingPatient = await findPatientByNameAndDOB(
@@ -188,6 +189,50 @@ export async function POST(request: NextRequest) {
               // Patient exists - will update missing fields
               matchStatus = 'update';
               patientName = `${existingPatient?.first_name} ${existingPatient?.last_name}`;
+
+              // Compare fields and determine what will be updated
+              const fieldsToCheck = [
+                { key: 'first_name', label: 'First Name' },
+                { key: 'last_name', label: 'Last Name' },
+                { key: 'address', label: 'Address' },
+                { key: 'phone', label: 'Phone' },
+                { key: 'city', label: 'City' },
+                { key: 'state', label: 'State' },
+                { key: 'zip', label: 'Zip Code' },
+                { key: 'fax', label: 'Fax' },
+                { key: 'gender', label: 'Gender' },
+                { key: 'ethnicity', label: 'Ethnicity' },
+                { key: 'referring_physician', label: 'Referring Physician' },
+                { key: 'npi_number', label: 'NPI Number' },
+                { key: 'reference_laboratory', label: 'Reference Laboratory' },
+                { key: 'sales_rep', label: 'Sales Rep' },
+                { key: 'insurance_payer', label: 'Insurance Payer' },
+                { key: 'policy_number', label: 'Policy Number' },
+                { key: 'icd10_codes', label: 'ICD-10 Codes' },
+                { key: 'personal_history', label: 'Personal History' },
+                { key: 'family_history', label: 'Family History' },
+                { key: 'comments', label: 'Comments' },
+                { key: 'kit_shipment_tracking', label: 'Kit Shipment Tracking' },
+                { key: 'kit_return_tracking', label: 'Kit Return Tracking' },
+                { key: 'kit_received_date', label: 'Kit Received Date' },
+                { key: 'kit_shipped_date', label: 'Kit Shipped Date' },
+                { key: 'accessioning_notes', label: 'Accessioning Notes' },
+              ];
+
+              fieldsToCheck.forEach(field => {
+                const oldValue = (existingPatient as any)?.[field.key];
+                const newValue = mappedRow?.[field.key];
+
+                if (newValue !== undefined && newValue !== null && newValue !== '') {
+                  const willUpdate = !oldValue || oldValue === null || oldValue === '';
+                  fieldUpdates.push({
+                    field: field.label,
+                    oldValue: oldValue || '(empty)',
+                    newValue: newValue,
+                    willUpdate: willUpdate
+                  });
+                }
+              });
             }
           }
 
@@ -196,6 +241,7 @@ export async function POST(request: NextRequest) {
             data: mappedRow,
             match_status: matchStatus,
             patient_name: patientName,
+            field_updates: fieldUpdates,
             errors: [],
           };
         } catch (error: any) {

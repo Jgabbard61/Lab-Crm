@@ -8,11 +8,19 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+interface FieldUpdate {
+  field: string;
+  oldValue: any;
+  newValue: any;
+  willUpdate: boolean;
+}
+
 interface PreviewRow {
   row_number: number;
   data: any;
   match_status: 'new' | 'existing' | 'update';
   patient_name?: string;
+  field_updates?: FieldUpdate[];
   errors?: string[];
 }
 
@@ -189,11 +197,11 @@ export function ExcelImportComponent() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+            <div className="space-y-3 max-h-[600px] overflow-y-auto">
               {preview?.slice(0, 20)?.map((row) => (
                 <div
                   key={row?.row_number}
-                  className={`p-3 rounded-lg border ${
+                  className={`p-4 rounded-lg border ${
                     row?.match_status === 'new'
                       ? 'bg-green-50 border-green-200'
                       : row?.match_status === 'update'
@@ -201,9 +209,9 @@ export function ExcelImportComponent() {
                       : 'bg-blue-50 border-blue-200'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">
+                      <p className="font-semibold text-gray-900 text-lg">
                         {row?.patient_name || 'Unknown Patient'}
                       </p>
                       <p className="text-sm text-gray-600">
@@ -222,8 +230,61 @@ export function ExcelImportComponent() {
                       {row?.match_status}
                     </Badge>
                   </div>
+
+                  {/* Field Updates */}
+                  {row?.match_status === 'update' && row?.field_updates && row?.field_updates?.length > 0 && (
+                    <div className="mt-3 space-y-2 border-t border-orange-200 pt-3">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Fields to Update:</p>
+                      {row?.field_updates?.map((update, idx) => (
+                        <div
+                          key={idx}
+                          className={`text-sm p-2 rounded ${
+                            update?.willUpdate
+                              ? 'bg-orange-100 border-l-4 border-orange-400'
+                              : 'bg-gray-100 border-l-4 border-gray-400'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-800">{update?.field}</span>
+                            {update?.willUpdate ? (
+                              <Badge variant="secondary" className="text-xs bg-orange-600 text-white">
+                                Will Update
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">
+                                No Change
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="mt-1 text-xs text-gray-600">
+                            {update?.willUpdate ? (
+                              <>
+                                <span className="text-gray-500">{update?.oldValue}</span>
+                                <span className="mx-2 text-orange-600">→</span>
+                                <span className="font-medium text-orange-700">{update?.newValue}</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-gray-600">Current: {update?.oldValue}</span>
+                                <span className="mx-2">|</span>
+                                <span className="text-gray-600">Excel: {update?.newValue}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {row?.match_status === 'update' && (!row?.field_updates || row?.field_updates?.length === 0) && (
+                    <div className="mt-3 text-sm text-gray-600 italic border-t border-orange-200 pt-3">
+                      No updates available - all fields already populated
+                    </div>
+                  )}
+
                   {row?.errors && row?.errors?.length > 0 && (
-                    <div className="mt-2 text-sm text-red-600">
+                    <div className="mt-3 text-sm text-red-600 border-t border-red-200 pt-3">
+                      <p className="font-medium mb-1">Errors:</p>
                       {row?.errors?.join(', ')}
                     </div>
                   )}
