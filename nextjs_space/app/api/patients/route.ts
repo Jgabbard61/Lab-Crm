@@ -36,14 +36,57 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // ✅ SECURITY FIX: Whitelist allowed fields (prevent mass assignment)
+    const patientData = {
+      // Basic Information
+      first_name: body.first_name,
+      last_name: body.last_name,
+      gender: body.gender,
+      date_of_birth: body.date_of_birth,
+      ethnicity: body.ethnicity,
+
+      // Contact Information
+      address: body.address,
+      city: body.city,
+      state: body.state,
+      zip: body.zip,
+      phone: body.phone,
+      fax: body.fax,
+
+      // Insurance & Billing
+      medicare_id: body.medicare_id,
+      insurance_payer: body.insurance_payer,
+      policy_number: body.policy_number,
+      status: body.status,
+
+      // Medical Information
+      icd10_codes: body.icd10_codes,
+      personal_history: body.personal_history,
+      family_history: body.family_history,
+
+      // Clinical References
+      referring_physician: body.referring_physician,
+      npi_number: body.npi_number,
+      reference_laboratory: body.reference_laboratory,
+      clinic_facility: body.clinic_facility,
+      sales_rep: body.sales_rep,
+
+      // Comments & Notes
+      comments: body.comments,
+      jg_comments: body.jg_comments,
+      mr: body.mr,
+
+      // Server-controlled audit fields
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      created_by: userId,
+      updated_by: userId,
+    };
+
     // Create patient
     const { data: patient, error: createError } = await supabase
       .from('patients')
-      .insert([{
-        ...body,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }])
+      .insert([patientData])
       .select()
       .single();
     
