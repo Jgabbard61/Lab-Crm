@@ -11,15 +11,26 @@ export async function GET(
 ) {
   try {
     const supabase = createServerClient();
-    
+
+    // ✅ SECURITY FIX: Check authentication before accessing patient data
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { data: patient, error } = await supabase
       .from('patients')
       .select('*')
       .eq('id', params?.id)
       .single();
-    
+
     if (error) throw error;
-    
+
     return NextResponse.json({ success: true, data: patient });
   } catch (error: any) {
     console.error('Error fetching patient:', error);
@@ -56,13 +67,55 @@ export async function PUT(
       .eq('id', params?.id)
       .single();
     
+    // ✅ SECURITY FIX: Whitelist allowed fields (prevent mass assignment)
+    const patientUpdates = {
+      // Basic Information
+      first_name: body.first_name,
+      last_name: body.last_name,
+      gender: body.gender,
+      date_of_birth: body.date_of_birth,
+      ethnicity: body.ethnicity,
+
+      // Contact Information
+      address: body.address,
+      city: body.city,
+      state: body.state,
+      zip: body.zip,
+      phone: body.phone,
+      fax: body.fax,
+
+      // Insurance & Billing
+      medicare_id: body.medicare_id,
+      insurance_payer: body.insurance_payer,
+      policy_number: body.policy_number,
+      status: body.status,
+
+      // Medical Information
+      icd10_codes: body.icd10_codes,
+      personal_history: body.personal_history,
+      family_history: body.family_history,
+
+      // Clinical References
+      referring_physician: body.referring_physician,
+      npi_number: body.npi_number,
+      reference_laboratory: body.reference_laboratory,
+      clinic_facility: body.clinic_facility,
+      sales_rep: body.sales_rep,
+
+      // Comments & Notes
+      comments: body.comments,
+      jg_comments: body.jg_comments,
+      mr: body.mr,
+
+      // Server-controlled audit fields
+      updated_at: new Date().toISOString(),
+      updated_by: userId,
+    };
+
     // Update patient
     const { data: patient, error: updateError } = await supabase
       .from('patients')
-      .update({
-        ...body,
-        updated_at: new Date().toISOString(),
-      })
+      .update(patientUpdates)
       .eq('id', params?.id)
       .select()
       .single();

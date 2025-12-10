@@ -8,38 +8,52 @@ export interface LoginCredentials {
 }
 
 export async function signIn(credentials: LoginCredentials) {
+  // ✅ SECURITY FIX: Prevent username enumeration via timing attacks
+  const startTime = Date.now();
+  let success = false;
+  let user = null;
+
   try {
-    // Since Supabase Auth uses email, we'll need to fetch user by username first
-    // Using ilike for case-insensitive match
-    const { data: userData, error: userError } = await supabase
+    // Always perform database lookup (even if it might fail)
+    const { data: userData } = await supabase
       .from('users')
       .select('email, username')
       .ilike('username', credentials.username)
       .single();
-    
-    if (userError || !userData) {
-      console.error('Username lookup error:', userError);
-      throw new Error('Invalid username or password');
-    }
-    
-    console.log('Found user email for username:', credentials.username);
-    
-    // Sign in with email and password
+
+    // Use dummy email if user not found to maintain constant timing
+    const emailToUse = userData?.email || 'nonexistent@dummy.local';
+
+    // Always attempt authentication (even with dummy email)
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: userData.email,
+      email: emailToUse,
       password: credentials.password,
     });
-    
-    if (error) {
-      console.error('Supabase auth error:', error);
-      throw error;
+
+    // Only mark as successful if both user exists AND auth succeeded
+    if (!error && userData) {
+      success = true;
+      user = data.user;
     }
-    
-    return { success: true, user: data.user };
+
   } catch (error: any) {
-    console.error('SignIn error:', error);
-    return { success: false, error: error?.message || 'Authentication failed' };
+    // Silently catch errors to prevent information leakage
+    // Do not log specific error details
   }
+
+  // Add constant delay to prevent timing attacks (300ms)
+  const elapsed = Date.now() - startTime;
+  const minDelay = 300;
+  if (elapsed < minDelay) {
+    await new Promise(resolve => setTimeout(resolve, minDelay - elapsed));
+  }
+
+  // Always return same error message (no indication of what failed)
+  if (!success) {
+    return { success: false, error: 'Invalid credentials' };
+  }
+
+  return { success: true, user };
 }
 
 export async function signOut() {

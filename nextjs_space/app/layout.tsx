@@ -1,10 +1,11 @@
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+// ✅ BUILD FIX: Commented out Google Fonts to prevent build failures when network is unavailable
+// import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-const inter = Inter({ subsets: ['latin'] });
+// const inter = Inter({ subsets: ['latin'] });
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className="font-sans" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
