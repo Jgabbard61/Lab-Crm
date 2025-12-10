@@ -11,15 +11,26 @@ export async function GET(
 ) {
   try {
     const supabase = createServerClient();
-    
+
+    // ✅ SECURITY FIX: Check authentication before accessing patient data
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { data: patient, error } = await supabase
       .from('patients')
       .select('*')
       .eq('id', params?.id)
       .single();
-    
+
     if (error) throw error;
-    
+
     return NextResponse.json({ success: true, data: patient });
   } catch (error: any) {
     console.error('Error fetching patient:', error);
