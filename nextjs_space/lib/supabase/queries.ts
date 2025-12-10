@@ -32,25 +32,57 @@ export async function getPatientById(patientId: string, client?: SupabaseClient)
 
 export async function searchPatientsByLastName(lastName: string, client?: SupabaseClient) {
   const db = client || supabase;
+
+  // ✅ SECURITY FIX: Validate and sanitize input to prevent SQL injection
+  if (!lastName || typeof lastName !== 'string') {
+    throw new Error('Invalid search term');
+  }
+
+  // Sanitize: Remove SQL wildcards that user shouldn't control
+  // Keep alphanumeric, spaces, hyphens, apostrophes (for names like O'Brien)
+  const sanitized = lastName.replace(/[^a-zA-Z0-9\s\-']/g, '');
+
+  if (sanitized.length === 0) {
+    throw new Error('Search term too short');
+  }
+
   const { data, error } = await db
     .from('patients')
     .select('*')
-    .ilike('last_name', `%${lastName}%`)
+    .ilike('last_name', `%${sanitized}%`)
     .order('last_name', { ascending: true });
-  
+
   if (error) throw error;
   return data as Patient[];
 }
 
 export async function findPatientByNameAndDOB(lastName: string, dateOfBirth: string, client?: SupabaseClient) {
   const db = client || supabase;
+
+  // ✅ SECURITY FIX: Validate and sanitize inputs
+  if (!lastName || typeof lastName !== 'string') {
+    throw new Error('Invalid last name');
+  }
+
+  // Sanitize last name
+  const sanitizedName = lastName.replace(/[^a-zA-Z0-9\s\-']/g, '');
+
+  if (!sanitizedName || sanitizedName.length === 0) {
+    throw new Error('Invalid last name after sanitization');
+  }
+
+  // Validate date format (YYYY-MM-DD)
+  if (!dateOfBirth || !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+    throw new Error('Invalid date format. Expected YYYY-MM-DD');
+  }
+
   const { data, error } = await db
     .from('patients')
     .select('*')
-    .ilike('last_name', lastName)
+    .ilike('last_name', sanitizedName)
     .eq('date_of_birth', dateOfBirth)
     .maybeSingle();
-  
+
   if (error) throw error;
   return data as Patient | null;
 }
