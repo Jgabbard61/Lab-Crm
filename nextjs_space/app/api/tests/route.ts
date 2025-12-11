@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       .single();
     
     if (createError) {
-      console.error('Error creating test:', createError);
+      // ✅ HIPAA FIX: Don't log PHI
       throw createError;
     }
     
@@ -116,9 +116,9 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ success: true, data: test }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating test:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to create test' },
+      { error: 'Failed to create test' },
       { status: 500 }
     );
   }

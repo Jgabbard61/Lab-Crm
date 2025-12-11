@@ -258,9 +258,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ preview });
   } catch (error: any) {
-    console.error('Preview error:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to preview file' },
+      { error: 'Failed to preview file' },
       { status: 500 }
     );
   }

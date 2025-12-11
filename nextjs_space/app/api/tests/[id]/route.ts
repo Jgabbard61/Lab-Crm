@@ -89,8 +89,8 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating test:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      // ✅ HIPAA FIX: Don't log PHI
+      return NextResponse.json({ error: 'Failed to update test' }, { status: 500 });
     }
 
     // Log the activity
@@ -105,9 +105,9 @@ export async function PUT(
 
     return NextResponse.json({ data: test }, { status: 200 });
   } catch (error: any) {
-    console.error('Error in PUT /api/tests/[id]:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { error: error?.message || 'Failed to update test' },
+      { error: 'Failed to update test' },
       { status: 500 }
     );
   }
@@ -158,15 +158,15 @@ export async function DELETE(
       .eq('id', testId);
 
     if (error) {
-      console.error('Error deleting test:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      // ✅ HIPAA FIX: Don't log PHI
+      return NextResponse.json({ error: 'Failed to delete test' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Test deleted successfully' }, { status: 200 });
   } catch (error: any) {
-    console.error('Error in DELETE /api/tests/[id]:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { error: error?.message || 'Failed to delete test' },
+      { error: 'Failed to delete test' },
       { status: 500 }
     );
   }

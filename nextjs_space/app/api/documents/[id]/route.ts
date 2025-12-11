@@ -47,9 +47,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Document deleted successfully' });
   } catch (error: any) {
-    console.error('Error deleting document:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to delete document' },
+      { error: 'Failed to delete document' },
       { status: 500 }
     );
   }

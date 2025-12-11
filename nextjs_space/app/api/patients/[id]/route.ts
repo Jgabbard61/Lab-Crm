@@ -33,9 +33,9 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: patient });
   } catch (error: any) {
-    console.error('Error fetching patient:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to fetch patient' },
+      { error: 'Failed to fetch patient' },
       { status: 500 }
     );
   }
@@ -121,7 +121,7 @@ export async function PUT(
       .single();
     
     if (updateError) {
-      console.error('Error updating patient:', updateError);
+      // ✅ HIPAA FIX: Don't log PHI
       throw updateError;
     }
     
@@ -139,9 +139,9 @@ export async function PUT(
     
     return NextResponse.json({ success: true, data: patient });
   } catch (error: any) {
-    console.error('Error updating patient:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to update patient' },
+      { error: 'Failed to update patient' },
       { status: 500 }
     );
   }
@@ -183,15 +183,15 @@ export async function DELETE(
       .eq('id', params?.id);
     
     if (deleteError) {
-      console.error('Error deleting patient:', deleteError);
+      // ✅ HIPAA FIX: Don't log PHI
       throw deleteError;
     }
     
     return NextResponse.json({ success: true, message: 'Patient deleted successfully' });
   } catch (error: any) {
-    console.error('Error deleting patient:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to delete patient' },
+      { error: 'Failed to delete patient' },
       { status: 500 }
     );
   }

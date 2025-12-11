@@ -42,15 +42,15 @@ export async function GET(
       .createSignedUrl(document?.file_path, 3600);
 
     if (signedError || !signedData) {
-      console.error('Error generating signed URL:', signedError);
+      // ✅ HIPAA FIX: Don't log PHI
       throw new Error('Failed to generate download URL');
     }
 
     return NextResponse.json({ url: signedData.signedUrl });
   } catch (error: any) {
-    console.error('Error generating download URL:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to generate download URL' },
+      { error: 'Failed to generate download URL' },
       { status: 500 }
     );
   }

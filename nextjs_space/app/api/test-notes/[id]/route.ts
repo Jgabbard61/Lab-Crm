@@ -51,9 +51,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Note deleted successfully' });
   } catch (error: any) {
-    console.error('Error deleting test note:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to delete note' },
+      { error: 'Failed to delete note' },
       { status: 500 }
     );
   }
@@ -123,9 +123,9 @@ export async function PUT(
 
     return NextResponse.json(updatedNote);
   } catch (error: any) {
-    console.error('Error updating test note:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to update note' },
+      { error: 'Failed to update note' },
       { status: 500 }
     );
   }

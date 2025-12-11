@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(notes || []);
   } catch (error: any) {
-    console.error('Error fetching test notes:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to fetch notes' },
+      { error: 'Failed to fetch notes' },
       { status: 500 }
     );
   }
@@ -94,9 +94,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newNote, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating test note:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to create note' },
+      { error: 'Failed to create note' },
       { status: 500 }
     );
   }

@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('Login error:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { error: error?.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
