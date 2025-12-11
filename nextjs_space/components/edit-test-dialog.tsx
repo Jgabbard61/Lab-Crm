@@ -9,10 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Package, CheckCircle, Beaker, DollarSign } from 'lucide-react';
+import { Loader2, Save, Package, CheckCircle, Beaker, DollarSign, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Test } from '@/lib/supabase/client';
-import { TEST_STATUS_OPTIONS, KIT_SHIPMENT_STATUS_OPTIONS, ACCESSIONING_STATUS_OPTIONS } from '@/lib/constants';
+import { TEST_STATUS_OPTIONS, KIT_SHIPMENT_STATUS_OPTIONS, ACCESSIONING_STATUS_OPTIONS, TEST_TYPES } from '@/lib/constants';
 
 interface EditTestDialogProps {
   open: boolean;
@@ -25,6 +25,7 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   // Core fields
   const [testType, setTestType] = useState('');
@@ -155,6 +156,40 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this test? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/tests/${test.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete test');
+      }
+
+      toast({
+        title: 'Test deleted',
+        description: 'Test has been deleted successfully.',
+      });
+
+      router.refresh();
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete test',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -197,12 +232,18 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Eye Disorder (PCR)">Eye Disorder (PCR)</SelectItem>
-                      <SelectItem value="Immunodeficiency (PCR)">Immunodeficiency (PCR)</SelectItem>
-                      <SelectItem value="Comprehensive Genetic Panel">Comprehensive Genetic Panel</SelectItem>
-                      <SelectItem value="Pharmacogenomics">Pharmacogenomics</SelectItem>
-                      <SelectItem value="Carrier Screening">Carrier Screening</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">PCR Tests</div>
+                      {TEST_TYPES.filter(t => t.category === 'PCR').map((testOption) => (
+                        <SelectItem key={testOption.value} value={testOption.value}>
+                          {testOption.label}
+                        </SelectItem>
+                      ))}
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 border-t mt-1 pt-2">Genetics Tests</div>
+                      {TEST_TYPES.filter(t => t.category === 'Genetics').map((testOption) => (
+                        <SelectItem key={testOption.value} value={testOption.value}>
+                          {testOption.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -397,23 +438,43 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={loading}>
-              {loading ? (
+          <div className="flex justify-between pt-4 border-t">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading || deleting}
+            >
+              {deleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  Deleting...
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Test
                 </>
               )}
             </Button>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={onClose} disabled={loading || deleting}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={loading || deleting}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

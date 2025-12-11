@@ -33,38 +33,44 @@ function getTestWorkflowSummary(test: Test) {
 // Get the most critical status to display
 function getCriticalStatus(tests: Test[]) {
   if (!tests || tests.length === 0) return null;
-  
-  // Priority order: Rejected > Accessioning > Kit Returned > Kit Shipped > At Lab > Resulted
-  const rejected = tests.find(t => t.accessioning_status === 'Rejected');
-  if (rejected) return { status: 'Rejected', type: 'accessioning', test: rejected };
-  
-  const accessioning = tests.find(t => t.accessioning_status === 'Pending' && t.kit_received_date);
-  if (accessioning) return { status: 'Accessioning', type: 'accessioning', test: accessioning };
-  
-  const kitReturned = tests.find(t => t.kit_return_tracking && !t.accessioning_date);
-  if (kitReturned) return { status: 'Kit Returned', type: 'shipping', test: kitReturned };
-  
-  const kitShipped = tests.find(t => t.kit_shipment_status === 'Shipped');
-  if (kitShipped) return { status: 'Kit Shipped', type: 'shipping', test: kitShipped };
-  
-  const atLab = tests.find(t => t.sent_to_lab_date && !t.results_received_date);
-  if (atLab) return { status: 'At Lab', type: 'lab', test: atLab };
-  
+
+  // Priority order based on workflow: Accession Rejected > Accession Accepted > Sent to Lab > Resulted > Billed > Kit Shipped
+
+  // Check for rejected samples (highest priority - needs attention)
+  const rejected = tests.find(t => t.accessioning_status === 'Rejected' || t.claim_status === 'Accession Rejected');
+  if (rejected) return { status: 'Accession Rejected', type: 'accessioning', test: rejected };
+
+  // Check for accepted samples
+  const accepted = tests.find(t => t.accessioning_status === 'Accepted' || t.claim_status === 'Accession Accepted');
+  if (accepted) return { status: 'Accession Accepted', type: 'accessioning', test: accepted };
+
+  // Check for samples sent to lab
+  const sentToLab = tests.find(t => t.sent_to_lab_date && !t.results_received_date);
+  if (sentToLab) return { status: 'Sent to Lab', type: 'lab', test: sentToLab };
+
+  // Check for resulted samples
   const resulted = tests.find(t => t.results_received_date);
   if (resulted) return { status: 'Resulted', type: 'lab', test: resulted };
-  
+
+  // Check for billed samples
+  const billed = tests.find(t => t.claim_status?.includes('Billed') || t.claim_status === 'Billed');
+  if (billed) return { status: 'Billed', type: 'billing', test: billed };
+
+  // Check for kit shipped (initial status)
+  const kitShipped = tests.find(t => t.kit_shipment_status === 'Shipped' || t.claim_status === 'Kit Shipped');
+  if (kitShipped) return { status: 'Kit Shipped', type: 'shipping', test: kitShipped };
+
   return null;
 }
 
 // Count tests by workflow stage
 function getWorkflowCounts(tests: Test[]) {
   return {
-    accessioning: tests.filter(t => t.accessioning_status === 'Pending' && t.kit_received_date).length,
-    accepted: tests.filter(t => t.accessioning_status === 'Accepted').length,
-    rejected: tests.filter(t => t.accessioning_status === 'Rejected').length,
-    atLab: tests.filter(t => t.sent_to_lab_date && !t.results_received_date).length,
+    accepted: tests.filter(t => t.accessioning_status === 'Accepted' || t.claim_status === 'Accession Accepted').length,
+    rejected: tests.filter(t => t.accessioning_status === 'Rejected' || t.claim_status === 'Accession Rejected').length,
+    sentToLab: tests.filter(t => t.sent_to_lab_date && !t.results_received_date).length,
     resulted: tests.filter(t => t.results_received_date).length,
-    billed: tests.filter(t => t.claim_status?.includes('Billed')).length,
+    billed: tests.filter(t => t.claim_status?.includes('Billed') || t.claim_status === 'Billed').length,
     paid: tests.filter(t => t.claim_status === 'Paid in Full').length,
   };
 }
@@ -99,18 +105,16 @@ export function PatientTable({ patients }: PatientTableProps) {
       if (workflowFilter !== 'all') {
         const tests = patient?.tests || [];
         switch (workflowFilter) {
-          case 'accessioning':
-            return tests.some(t => t.accessioning_status === 'Pending' && t.kit_received_date);
           case 'accepted':
-            return tests.some(t => t.accessioning_status === 'Accepted');
+            return tests.some(t => t.accessioning_status === 'Accepted' || t.claim_status === 'Accession Accepted');
           case 'rejected':
-            return tests.some(t => t.accessioning_status === 'Rejected');
-          case 'at_lab':
+            return tests.some(t => t.accessioning_status === 'Rejected' || t.claim_status === 'Accession Rejected');
+          case 'sent_to_lab':
             return tests.some(t => t.sent_to_lab_date && !t.results_received_date);
           case 'resulted':
             return tests.some(t => t.results_received_date);
           case 'billed':
-            return tests.some(t => t.claim_status?.includes('Billed'));
+            return tests.some(t => t.claim_status?.includes('Billed') || t.claim_status === 'Billed');
           case 'paid':
             return tests.some(t => t.claim_status === 'Paid in Full');
           default:
@@ -124,24 +128,20 @@ export function PatientTable({ patients }: PatientTableProps) {
 
   return (
     <div className="space-y-6">
-      {/* Quick Stats Bar */}
+      {/* Quick Stats Bar - Workflow Tracking */}
       <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg p-4 border border-teal-200">
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 text-center">
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-teal-600">{totalCounts.accessioning}</p>
-            <p className="text-xs text-gray-600">Accessioning</p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
           <div className="space-y-1">
             <p className="text-2xl font-bold text-green-600">{totalCounts.accepted}</p>
-            <p className="text-xs text-gray-600">Accepted</p>
+            <p className="text-xs text-gray-600">Accession Accepted</p>
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-bold text-red-600">{totalCounts.rejected}</p>
-            <p className="text-xs text-gray-600">Rejected</p>
+            <p className="text-xs text-gray-600">Accession Rejected</p>
           </div>
           <div className="space-y-1">
-            <p className="text-2xl font-bold text-purple-600">{totalCounts.atLab}</p>
-            <p className="text-xs text-gray-600">At Lab</p>
+            <p className="text-2xl font-bold text-purple-600">{totalCounts.sentToLab}</p>
+            <p className="text-xs text-gray-600">Sent to Lab</p>
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-bold text-cyan-600">{totalCounts.resulted}</p>
@@ -152,7 +152,7 @@ export function PatientTable({ patients }: PatientTableProps) {
             <p className="text-xs text-gray-600">Billed</p>
           </div>
           <div className="space-y-1">
-            <p className="text-2xl font-bold text-green-600">{totalCounts.paid}</p>
+            <p className="text-2xl font-bold text-green-700">{totalCounts.paid}</p>
             <p className="text-xs text-gray-600">Paid</p>
           </div>
         </div>
@@ -204,13 +204,12 @@ export function PatientTable({ patients }: PatientTableProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Workflow Stages</SelectItem>
-                <SelectItem value="accessioning">🔍 Accessioning ({totalCounts.accessioning})</SelectItem>
-                <SelectItem value="accepted">✅ Accepted ({totalCounts.accepted})</SelectItem>
-                <SelectItem value="rejected">❌ Rejected ({totalCounts.rejected})</SelectItem>
-                <SelectItem value="at_lab">🔬 At Lab ({totalCounts.atLab})</SelectItem>
+                <SelectItem value="accepted">✅ Accession Accepted ({totalCounts.accepted})</SelectItem>
+                <SelectItem value="rejected">❌ Accession Rejected ({totalCounts.rejected})</SelectItem>
+                <SelectItem value="sent_to_lab">🔬 Sent to Lab ({totalCounts.sentToLab})</SelectItem>
                 <SelectItem value="resulted">📊 Resulted ({totalCounts.resulted})</SelectItem>
                 <SelectItem value="billed">💰 Billed ({totalCounts.billed})</SelectItem>
-                <SelectItem value="paid">✅ Paid ({totalCounts.paid})</SelectItem>
+                <SelectItem value="paid">💵 Paid ({totalCounts.paid})</SelectItem>
               </SelectContent>
             </Select>
           </div>

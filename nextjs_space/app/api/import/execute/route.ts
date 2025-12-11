@@ -47,19 +47,42 @@ const HEADER_MAPPING: Record<string, string> = {
   'dos(collection)': 'date_of_service',
   'dos': 'date_of_service',
   
-  // Kit Tracking (NEW - from your tracking sheet)
+  // Kit Tracking - Ship TO Patient (outbound)
   'kit shipment tracking id': 'kit_shipment_tracking',
   'kit shipment tracking': 'kit_shipment_tracking',
   'shipment tracking id': 'kit_shipment_tracking',
   'ship to tracking': 'kit_shipment_tracking',
+  'ship to patient tracking': 'kit_shipment_tracking',
+  'shipped to patient tracking': 'kit_shipment_tracking',
+  'outbound tracking': 'kit_shipment_tracking',
+  'outbound tracking #': 'kit_shipment_tracking',
+  'tracking # to patient': 'kit_shipment_tracking',
+  'tracking to patient': 'kit_shipment_tracking',
+  'fedex ship to': 'kit_shipment_tracking',
+  'fedex to patient': 'kit_shipment_tracking',
+
+  // Kit Tracking - Ship FROM Patient (return)
   'pt kit return tracking id': 'kit_return_tracking',
   'kit return tracking id': 'kit_return_tracking',
   'kit return tracking': 'kit_return_tracking',
   'return tracking id': 'kit_return_tracking',
   'ship from tracking': 'kit_return_tracking',
+  'ship from patient tracking': 'kit_return_tracking',
+  'shipped from patient tracking': 'kit_return_tracking',
+  'return tracking': 'kit_return_tracking',
+  'inbound tracking': 'kit_return_tracking',
+  'inbound tracking #': 'kit_return_tracking',
+  'tracking # from patient': 'kit_return_tracking',
+  'tracking from patient': 'kit_return_tracking',
+  'fedex ship from': 'kit_return_tracking',
+  'fedex from patient': 'kit_return_tracking',
+
+  // Dates
   'kit received date': 'kit_received_date',
   'kit return status': 'accessioning_status',
   'entered date': 'kit_shipped_date',
+  'kit shipped date': 'kit_shipped_date',
+  'date shipped': 'kit_shipped_date',
   
   // Accessioning/QC
   'comments / rejection reason': 'accessioning_notes',

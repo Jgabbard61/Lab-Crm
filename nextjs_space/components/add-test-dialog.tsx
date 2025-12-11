@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Test } from '@/lib/supabase/client';
-import { TEST_STATUS_OPTIONS } from '@/lib/constants';
+import { TEST_STATUS_OPTIONS, TEST_TYPES } from '@/lib/constants';
 
 interface AddTestDialogProps {
   open: boolean;
@@ -109,12 +109,18 @@ export function AddTestDialog({ open, onClose, patientId, onTestAdded }: AddTest
                   <SelectValue placeholder="Select test type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Eye Disorder (PCR)">Eye Disorder (PCR)</SelectItem>
-                  <SelectItem value="Immunodeficiency (PCR)">Immunodeficiency (PCR)</SelectItem>
-                  <SelectItem value="Comprehensive Genetic Panel">Comprehensive Genetic Panel</SelectItem>
-                  <SelectItem value="Pharmacogenomics">Pharmacogenomics</SelectItem>
-                  <SelectItem value="Carrier Screening">Carrier Screening</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">PCR Tests</div>
+                  {TEST_TYPES.filter(t => t.category === 'PCR').map((test) => (
+                    <SelectItem key={test.value} value={test.value}>
+                      {test.label}
+                    </SelectItem>
+                  ))}
+                  <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 border-t mt-1 pt-2">Genetics Tests</div>
+                  {TEST_TYPES.filter(t => t.category === 'Genetics').map((test) => (
+                    <SelectItem key={test.value} value={test.value}>
+                      {test.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
