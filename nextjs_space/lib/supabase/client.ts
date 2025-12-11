@@ -78,7 +78,7 @@ export interface Test {
   results_received_date?: string;
   
   // Billing & Claims
-  claim_status: 'Pending' | 'Finalized' | 'Denied' | 'Kit Shipped' | 'Kit Returned' | 'Accessioning' | 'Accepted' | 'Rejected' | 'Sent to Lab' | 'At Lab' | 'Resulted' | 'Ready for Bill' | 'Billed - Pending' | 'Billed - Confirmed' | 'Paid in Full' | 'Partial Payment';
+  claim_status: 'Pending' | 'Finalized' | 'Denied' | 'Kit Shipped' | 'Kit Returned' | 'Accessioning' | 'Accepted' | 'Rejected' | 'Accession Accepted' | 'Accession Rejected' | 'Sent to Lab' | 'At Lab' | 'Resulted' | 'Ready for Bill' | 'Billed' | 'Billed - Pending' | 'Billed - Confirmed' | 'Paid in Full' | 'Partial Payment';
   billed_date?: string;
   claim_number?: string;
   charges?: number;
