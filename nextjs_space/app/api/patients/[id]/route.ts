@@ -126,13 +126,22 @@ export async function PUT(
     }
     
     // Log activity
+    // ✅ HIPAA FIX: Don't store full PHI - only log which fields changed
+    const changedFields = Object.keys(body).filter(key => {
+      return oldPatient && body[key] !== undefined && body[key] !== oldPatient[key];
+    });
+
     await supabase
       .from('activity_logs')
       .insert([{
         patient_id: patient?.id,
         action_type: 'Updated',
         entity_type: 'Patient',
-        changes: { before: oldPatient, after: body },
+        changes: {
+          action: 'Updated patient',
+          patient_name: `${patient?.first_name || ''} ${patient?.last_name || ''}`.trim(),
+          fields_updated: changedFields
+        },
         performed_by: userId,
         timestamp: new Date().toISOString(),
       }]);

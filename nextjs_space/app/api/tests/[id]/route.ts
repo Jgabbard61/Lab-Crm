@@ -94,12 +94,21 @@ export async function PUT(
     }
 
     // Log the activity
+    // ✅ HIPAA FIX: Don't store full PHI - only log which fields changed
+    const changedFields = Object.keys(body).filter(key => {
+      return existingTest && body[key] !== undefined && body[key] !== existingTest[key];
+    });
+
     await supabase.from('activity_logs').insert({
       patient_id: existingTest.patient_id,
       test_id: testId,
       action_type: 'Updated',
       entity_type: 'Test',
-      changes: { before: existingTest, after: body },
+      changes: {
+        action: 'Updated test',
+        test_type: existingTest.test_type,
+        fields_updated: changedFields
+      },
       performed_by: session.user.id,
     });
 
@@ -142,12 +151,16 @@ export async function DELETE(
     }
 
     // Log the activity before deletion
+    // ✅ HIPAA FIX: Don't store full PHI in activity logs
     await supabase.from('activity_logs').insert({
       patient_id: existingTest.patient_id,
       test_id: testId,
       action_type: 'Deleted',
       entity_type: 'Test',
-      changes: { deleted: existingTest },
+      changes: {
+        action: 'Deleted test',
+        test_type: existingTest.test_type
+      },
       performed_by: session.user.id,
     });
 

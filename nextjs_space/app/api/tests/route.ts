@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Log activity
+    // ✅ HIPAA FIX: Don't store full PHI in activity logs
     await supabase
       .from('activity_logs')
       .insert([{
@@ -109,7 +110,11 @@ export async function POST(request: NextRequest) {
         test_id: test?.id,
         action_type: 'Created',
         entity_type: 'Test',
-        changes: { created: body },
+        changes: {
+          action: 'Created test',
+          test_type: body?.test_type,
+          claim_status: body?.claim_status || 'Pending'
+        },
         performed_by: userId,
         timestamp: new Date().toISOString(),
       }]);

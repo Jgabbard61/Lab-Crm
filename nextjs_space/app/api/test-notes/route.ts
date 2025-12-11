@@ -81,13 +81,17 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     // Log activity
+    // ✅ HIPAA FIX: Don't store note content (may contain PHI)
     await supabase.from('activity_logs').insert([
       {
         patient_id,
         test_id,
         action_type: 'Note Added',
         entity_type: 'test_note',
-        changes: { note, priority: priority || 'Low' },
+        changes: {
+          action: 'Added note',
+          priority: priority || 'Low'
+        },
         performed_by: created_by,
       },
     ]);
