@@ -52,6 +52,55 @@ export async function POST(request: NextRequest) {
           throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
         }
 
+        // ✅ SECURITY FIX: Validate file type (prevent malicious file uploads)
+        const allowedMimeTypes = [
+          // PDF documents
+          'application/pdf',
+          // Images
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/tiff',
+          'image/tif',
+          'image/bmp',
+          'image/webp',
+          // Microsoft Office
+          'application/msword', // .doc
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+          'application/vnd.ms-excel', // .xls
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+          // Text and CSV
+          'text/plain',
+          'text/csv',
+          'application/csv',
+        ];
+
+        const allowedExtensions = [
+          '.pdf', '.jpg', '.jpeg', '.png', '.gif', '.tif', '.tiff', '.bmp', '.webp',
+          '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv'
+        ];
+
+        const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+        const mimeType = file.type.toLowerCase();
+
+        if (!allowedMimeTypes.includes(mimeType) && !allowedExtensions.includes(fileExtension)) {
+          throw new Error(
+            `Invalid file type. Allowed types: PDF, images (JPG, PNG, GIF, TIFF), ` +
+            `Microsoft Office (DOC, DOCX, XLS, XLSX), text files (TXT, CSV). ` +
+            `Received: ${file.type || 'unknown'}`
+          );
+        }
+
+        // ✅ SECURITY FIX: Enforce file size limit (prevent DoS via large uploads)
+        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB limit
+        if (file.size > MAX_FILE_SIZE) {
+          throw new Error(
+            `File too large. Maximum size: 50MB. ` +
+            `Your file: ${(file.size / (1024 * 1024)).toFixed(2)}MB`
+          );
+        }
+
         // Send progress update
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ status: 'processing', message: 'Uploading to storage...' })}\n\n`)
