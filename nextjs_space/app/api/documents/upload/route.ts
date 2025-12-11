@@ -5,6 +5,35 @@ import { uploadDocument } from '@/lib/supabase/storage';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * ✅ SECURITY FIX: Sanitize error messages to prevent database details from leaking
+ */
+function sanitizeErrorMessage(error: any): string {
+  const message = error?.message || '';
+
+  // Block database-specific error messages
+  if (message.includes('duplicate key') || message.includes('unique constraint')) {
+    return 'A document with this information already exists';
+  }
+  if (message.includes('foreign key') || message.includes('violates')) {
+    return 'Invalid reference in document data';
+  }
+  if (message.includes('permission') || message.includes('policy')) {
+    return 'You do not have permission to perform this action';
+  }
+  if (message.includes('storage') || message.includes('bucket')) {
+    return 'File storage error occurred';
+  }
+
+  // Return safe, generic messages for known errors
+  if (message.includes('Missing required fields') || message.includes('Invalid file type') || message.includes('File too large')) {
+    return message; // These are our safe validation messages
+  }
+
+  // Default generic message for unknown errors
+  return 'Upload failed. Please try again.';
+}
+
 export async function POST(request: NextRequest) {
   // Create server-side Supabase client OUTSIDE the stream to ensure cookie access
   const supabase = createServerClient();
@@ -159,7 +188,8 @@ export async function POST(request: NextRequest) {
         );
       } catch (error: any) {
         // ✅ HIPAA FIX: Don't log PHI or stack traces
-        const errorMessage = error?.message || 'Upload failed. Please try again.';
+        // ✅ SECURITY FIX: Sanitize error message to prevent database details from leaking
+        const errorMessage = sanitizeErrorMessage(error);
 
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({
