@@ -91,27 +91,32 @@ export async function POST(request: NextRequest) {
       .single();
     
     if (createError) {
-      console.error('Error creating patient:', createError);
+      // ✅ HIPAA FIX: Don't log error details that may contain PHI
       throw createError;
     }
     
     // Log activity
+    // ✅ HIPAA FIX: Don't store full PHI in activity logs
     await supabase
       .from('activity_logs')
       .insert([{
         patient_id: patient?.id,
         action_type: 'Created',
         entity_type: 'Patient',
-        changes: { created: body },
+        changes: {
+          action: 'Created patient',
+          patient_name: `${body.first_name || ''} ${body.last_name || ''}`.trim()
+        },
         performed_by: userId,
         timestamp: new Date().toISOString(),
       }]);
     
     return NextResponse.json({ success: true, data: patient }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating patient:', error);
+    // ✅ HIPAA FIX: Don't log error details that may contain PHI
+    // In production, use a proper logging service with PHI filtering
     return NextResponse.json(
-      { message: error?.message || 'Failed to create patient' },
+      { error: 'Failed to create patient' },
       { status: 500 }
     );
   }

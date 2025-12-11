@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(notes || []);
   } catch (error: any) {
-    console.error('Error fetching test notes:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to fetch notes' },
+      { error: 'Failed to fetch notes' },
       { status: 500 }
     );
   }
@@ -81,22 +81,26 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     // Log activity
+    // ✅ HIPAA FIX: Don't store note content (may contain PHI)
     await supabase.from('activity_logs').insert([
       {
         patient_id,
         test_id,
         action_type: 'Note Added',
         entity_type: 'test_note',
-        changes: { note, priority: priority || 'Low' },
+        changes: {
+          action: 'Added note',
+          priority: priority || 'Low'
+        },
         performed_by: created_by,
       },
     ]);
 
     return NextResponse.json(newNote, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating test note:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to create note' },
+      { error: 'Failed to create note' },
       { status: 500 }
     );
   }

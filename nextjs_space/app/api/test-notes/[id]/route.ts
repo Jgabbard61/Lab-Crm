@@ -38,22 +38,26 @@ export async function DELETE(
     if (deleteError) throw deleteError;
 
     // Log activity
+    // ✅ HIPAA FIX: Don't store note content (may contain PHI)
     await supabase.from('activity_logs').insert([
       {
         patient_id: note.patient_id,
         test_id: note.test_id,
         action_type: 'Note Deleted',
         entity_type: 'test_note',
-        changes: { note: note.note, priority: note.priority },
+        changes: {
+          action: 'Deleted note',
+          priority: note.priority
+        },
         performed_by: session.user?.email || 'Unknown',
       },
     ]);
 
     return NextResponse.json({ message: 'Note deleted successfully' });
   } catch (error: any) {
-    console.error('Error deleting test note:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to delete note' },
+      { error: 'Failed to delete note' },
       { status: 500 }
     );
   }
@@ -105,6 +109,7 @@ export async function PUT(
     if (error) throw error;
 
     // Log activity
+    // ✅ HIPAA FIX: Don't store note content (may contain PHI)
     if (oldNote) {
       await supabase.from('activity_logs').insert([
         {
@@ -113,8 +118,9 @@ export async function PUT(
           action_type: 'Note Updated',
           entity_type: 'test_note',
           changes: {
-            before: { note: oldNote.note, priority: oldNote.priority },
-            after: { note, priority: priority || 'Low' },
+            action: 'Updated note',
+            priority_before: oldNote.priority,
+            priority_after: priority || 'Low'
           },
           performed_by: session.user?.email || 'Unknown',
         },
@@ -123,9 +129,9 @@ export async function PUT(
 
     return NextResponse.json(updatedNote);
   } catch (error: any) {
-    console.error('Error updating test note:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to update note' },
+      { error: 'Failed to update note' },
       { status: 500 }
     );
   }

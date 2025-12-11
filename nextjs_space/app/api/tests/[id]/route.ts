@@ -89,25 +89,35 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating test:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      // ✅ HIPAA FIX: Don't log PHI
+      return NextResponse.json({ error: 'Failed to update test' }, { status: 500 });
     }
 
     // Log the activity
+    // ✅ HIPAA FIX: Don't store full PHI - only log which fields changed
+    const changedFields = Object.keys(body).filter(key => {
+      return existingTest && body[key as keyof typeof body] !== undefined &&
+             body[key as keyof typeof body] !== (existingTest as any)[key];
+    });
+
     await supabase.from('activity_logs').insert({
       patient_id: existingTest.patient_id,
       test_id: testId,
       action_type: 'Updated',
       entity_type: 'Test',
-      changes: { before: existingTest, after: body },
+      changes: {
+        action: 'Updated test',
+        test_type: existingTest.test_type,
+        fields_updated: changedFields
+      },
       performed_by: session.user.id,
     });
 
     return NextResponse.json({ data: test }, { status: 200 });
   } catch (error: any) {
-    console.error('Error in PUT /api/tests/[id]:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { error: error?.message || 'Failed to update test' },
+      { error: 'Failed to update test' },
       { status: 500 }
     );
   }
@@ -142,12 +152,16 @@ export async function DELETE(
     }
 
     // Log the activity before deletion
+    // ✅ HIPAA FIX: Don't store full PHI in activity logs
     await supabase.from('activity_logs').insert({
       patient_id: existingTest.patient_id,
       test_id: testId,
       action_type: 'Deleted',
       entity_type: 'Test',
-      changes: { deleted: existingTest },
+      changes: {
+        action: 'Deleted test',
+        test_type: existingTest.test_type
+      },
       performed_by: session.user.id,
     });
 
@@ -158,15 +172,15 @@ export async function DELETE(
       .eq('id', testId);
 
     if (error) {
-      console.error('Error deleting test:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      // ✅ HIPAA FIX: Don't log PHI
+      return NextResponse.json({ error: 'Failed to delete test' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Test deleted successfully' }, { status: 200 });
   } catch (error: any) {
-    console.error('Error in DELETE /api/tests/[id]:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { error: error?.message || 'Failed to delete test' },
+      { error: 'Failed to delete test' },
       { status: 500 }
     );
   }

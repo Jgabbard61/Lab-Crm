@@ -37,19 +37,24 @@ export async function DELETE(
     await deleteDocumentQuery(params?.id);
 
     // Log activity
+    // ✅ HIPAA FIX: Don't store full PHI in activity logs
     await createActivityLog({
       patient_id: document?.patient_id,
       action_type: 'Deleted',
       entity_type: 'Document',
-      changes: { deleted: document },
+      changes: {
+        action: 'Deleted document',
+        document_category: document?.category,
+        file_name: document?.file_name
+      },
       performed_by: userId,
     });
 
     return NextResponse.json({ success: true, message: 'Document deleted successfully' });
   } catch (error: any) {
-    console.error('Error deleting document:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to delete document' },
+      { error: 'Failed to delete document' },
       { status: 500 }
     );
   }

@@ -33,9 +33,9 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: patient });
   } catch (error: any) {
-    console.error('Error fetching patient:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to fetch patient' },
+      { error: 'Failed to fetch patient' },
       { status: 500 }
     );
   }
@@ -121,27 +121,37 @@ export async function PUT(
       .single();
     
     if (updateError) {
-      console.error('Error updating patient:', updateError);
+      // ✅ HIPAA FIX: Don't log PHI
       throw updateError;
     }
     
     // Log activity
+    // ✅ HIPAA FIX: Don't store full PHI - only log which fields changed
+    const changedFields = Object.keys(body).filter(key => {
+      return oldPatient && body[key as keyof typeof body] !== undefined &&
+             body[key as keyof typeof body] !== (oldPatient as any)[key];
+    });
+
     await supabase
       .from('activity_logs')
       .insert([{
         patient_id: patient?.id,
         action_type: 'Updated',
         entity_type: 'Patient',
-        changes: { before: oldPatient, after: body },
+        changes: {
+          action: 'Updated patient',
+          patient_name: `${patient?.first_name || ''} ${patient?.last_name || ''}`.trim(),
+          fields_updated: changedFields
+        },
         performed_by: userId,
         timestamp: new Date().toISOString(),
       }]);
     
     return NextResponse.json({ success: true, data: patient });
   } catch (error: any) {
-    console.error('Error updating patient:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to update patient' },
+      { error: 'Failed to update patient' },
       { status: 500 }
     );
   }
@@ -183,15 +193,15 @@ export async function DELETE(
       .eq('id', params?.id);
     
     if (deleteError) {
-      console.error('Error deleting patient:', deleteError);
+      // ✅ HIPAA FIX: Don't log PHI
       throw deleteError;
     }
     
     return NextResponse.json({ success: true, message: 'Patient deleted successfully' });
   } catch (error: any) {
-    console.error('Error deleting patient:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to delete patient' },
+      { error: 'Failed to delete patient' },
       { status: 500 }
     );
   }

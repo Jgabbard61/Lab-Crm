@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (insertError) {
-      console.error('Error creating user record:', insertError);
+      // ✅ HIPAA FIX: Don't log PHI
       // Don't fail the signup if the user record creation fails
       // The auth user was created successfully
     }
@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Signup error:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { error: error?.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
       );
   }

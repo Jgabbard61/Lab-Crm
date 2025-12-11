@@ -376,7 +376,7 @@ export async function POST(request: NextRequest) {
       } catch (error: any) {
         failedRows++;
         errors.push(`Row ${rowNumber}: ${error?.message || 'Unknown error'}`);
-        console.error(`Error processing row ${rowNumber}:`, error);
+        // ✅ HIPAA FIX: Don't log PHI
       }
     }
 
@@ -398,9 +398,9 @@ export async function POST(request: NextRequest) {
       errors,
     });
   } catch (error: any) {
-    console.error('Import error:', error);
+    // ✅ HIPAA FIX: Don't log PHI
     return NextResponse.json(
-      { message: error?.message || 'Failed to import file' },
+      { error: 'Failed to import file' },
       { status: 500 }
     );
   }
