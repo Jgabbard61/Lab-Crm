@@ -128,7 +128,8 @@ export async function PUT(
     // Log activity
     // ✅ HIPAA FIX: Don't store full PHI - only log which fields changed
     const changedFields = Object.keys(body).filter(key => {
-      return oldPatient && body[key] !== undefined && body[key] !== oldPatient[key];
+      return oldPatient && body[key as keyof typeof body] !== undefined &&
+             body[key as keyof typeof body] !== (oldPatient as any)[key];
     });
 
     await supabase
