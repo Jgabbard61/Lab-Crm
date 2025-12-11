@@ -122,7 +122,7 @@ export interface Document {
   patient_id: string;
   test_id?: string;
   document_type: string;
-  document_category?: 'Results' | 'EOBs' | 'Denials' | 'Payments' | 'Insurance Correspondence' | 'Requisitions';
+  document_category?: 'Lab Results' | 'EOB/EOP' | 'Claim Checks' | 'Insurance Correspondence' | 'Requisition Forms';
   file_name: string;
   file_path: string;
   file_size?: number;

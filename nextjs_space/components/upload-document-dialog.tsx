@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Upload, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Document } from '@/lib/supabase/client';
+import { DOCUMENT_CATEGORIES } from '@/lib/constants';
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -17,20 +18,10 @@ interface UploadDocumentDialogProps {
   onDocumentAdded: (document: Document) => void;
 }
 
-// Document types match the folder categories
-const DOCUMENT_TYPES = [
-  { value: 'Results', label: 'Results', icon: '🧪' },
-  { value: 'EOBs', label: 'EOBs', icon: '💰' },
-  { value: 'Denials', label: 'Denials', icon: '⚠️' },
-  { value: 'Payments', label: 'Payments', icon: '💳' },
-  { value: 'Insurance Correspondence', label: 'Insurance Correspondence', icon: '✉️' },
-  { value: 'Requisitions', label: 'Requisitions', icon: '📋' },
-];
-
 export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded }: UploadDocumentDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [documentType, setDocumentType] = useState('Results');
+  const [documentType, setDocumentType] = useState('Lab Results');
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState('');
 
@@ -154,7 +145,7 @@ export function UploadDocumentDialog({ open, onClose, patientId, onDocumentAdded
                 <SelectValue placeholder="Select document type" />
               </SelectTrigger>
               <SelectContent>
-                {DOCUMENT_TYPES?.map((type) => (
+                {DOCUMENT_CATEGORIES?.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     <span className="flex items-center gap-2">
                       <span>{type.icon}</span>

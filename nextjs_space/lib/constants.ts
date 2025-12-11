@@ -11,12 +11,21 @@ export const TEST_STATUS_OPTIONS = [
   { value: 'Paid in Full', label: 'Paid in Full', color: 'bg-green-100 text-green-800' },
   { value: 'Partial Payment', label: 'Partial Payment', color: 'bg-yellow-100 text-yellow-800' },
   { value: 'Denied', label: 'Denied', color: 'bg-red-100 text-red-800' },
+] as const;
 
-  // Legacy statuses (for backward compatibility with old data)
-  { value: 'Pending', label: 'Pending (Legacy)', color: 'bg-gray-100 text-gray-800' },
-  { value: 'Accessioning', label: 'Accessioning (Legacy)', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'Accepted', label: 'Accepted (Legacy)', color: 'bg-green-100 text-green-800' },
-  { value: 'Rejected', label: 'Rejected (Legacy)', color: 'bg-red-100 text-red-800' },
+// All possible status values (includes legacy for backward compatibility with existing data)
+export const ALL_STATUS_VALUES = [
+  ...TEST_STATUS_OPTIONS.map(opt => opt.value),
+  'Pending',
+  'Accessioning',
+  'Accepted',
+  'Rejected',
+  'Kit Returned',
+  'At Lab',
+  'Ready for Bill',
+  'Billed - Pending',
+  'Billed - Confirmed',
+  'Finalized',
 ] as const;
 
 // Kit Shipment Status Options
@@ -36,13 +45,11 @@ export const ACCESSIONING_STATUS_OPTIONS = [
 
 // Document Categories
 export const DOCUMENT_CATEGORIES = [
-  { value: 'all', label: 'All Documents', icon: '📁' },
-  { value: 'Results', label: 'Results', icon: '🧪' },
-  { value: 'EOBs', label: 'EOBs', icon: '💰' },
-  { value: 'Denials', label: 'Denials', icon: '⚠️' },
-  { value: 'Payments', label: 'Payments', icon: '💳' },
-  { value: 'Insurance Correspondence', label: 'Insurance Correspondence', icon: '✉️' },
-  { value: 'Requisitions', label: 'Requisitions', icon: '📋' },
+  { value: 'Lab Results', label: 'Lab Results', icon: '🧪', color: 'bg-teal-100 text-teal-800' },
+  { value: 'EOB/EOP', label: 'EOB/EOP', icon: '💰', color: 'bg-blue-100 text-blue-800' },
+  { value: 'Claim Checks', label: 'Claim Checks', icon: '💳', color: 'bg-green-100 text-green-800' },
+  { value: 'Insurance Correspondence', label: 'Insurance Correspondence', icon: '✉️', color: 'bg-purple-100 text-purple-800' },
+  { value: 'Requisition Forms', label: 'Requisition Forms', icon: '📋', color: 'bg-orange-100 text-orange-800' },
 ] as const;
 
 // Patient Status Options
