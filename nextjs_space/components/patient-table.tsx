@@ -356,11 +356,6 @@ export function PatientTable({ patients }: PatientTableProps) {
                         
                         {/* Quick workflow badges */}
                         <div className="flex flex-wrap gap-2">
-                          {testCounts.accessioning > 0 && (
-                            <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
-                              🔍 {testCounts.accessioning} Accessioning
-                            </Badge>
-                          )}
                           {testCounts.accepted > 0 && (
                             <Badge variant="outline" className="bg-green-50 text-green-800 border-green-300">
                               ✅ {testCounts.accepted} Accepted
@@ -371,9 +366,9 @@ export function PatientTable({ patients }: PatientTableProps) {
                               ❌ {testCounts.rejected} Rejected
                             </Badge>
                           )}
-                          {testCounts.atLab > 0 && (
+                          {testCounts.sentToLab > 0 && (
                             <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-300">
-                              🔬 {testCounts.atLab} At Lab
+                              🔬 {testCounts.sentToLab} Sent to Lab
                             </Badge>
                           )}
                           {testCounts.resulted > 0 && (
@@ -388,7 +383,7 @@ export function PatientTable({ patients }: PatientTableProps) {
                           )}
                           {testCounts.paid > 0 && (
                             <Badge variant="outline" className="bg-green-50 text-green-800 border-green-300">
-                              ✅ {testCounts.paid} Paid
+                              💵 {testCounts.paid} Paid
                             </Badge>
                           )}
                         </div>
