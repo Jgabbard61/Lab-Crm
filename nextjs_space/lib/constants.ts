@@ -43,6 +43,22 @@ export const ACCESSIONING_STATUS_OPTIONS = [
   { value: 'Rejected', label: 'Rejected', color: 'bg-red-100 text-red-800' },
 ] as const;
 
+// Billing Status Options - Detailed billing workflow tracking
+export const BILLING_STATUS_OPTIONS = [
+  { value: 'Not Billed', label: 'Not Billed', color: 'bg-gray-100 text-gray-800' },
+  { value: 'Ready to Bill', label: 'Ready to Bill', color: 'bg-blue-100 text-blue-800' },
+  { value: 'Sent to Payer', label: 'Sent to Payer', color: 'bg-indigo-100 text-indigo-800' },
+  { value: 'Received by Payer', label: 'Received by Payer', color: 'bg-purple-100 text-purple-800' },
+  { value: 'Under Review', label: 'Under Review', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'Claim Accepted', label: 'Claim Accepted', color: 'bg-green-100 text-green-800' },
+  { value: 'Claim Rejected', label: 'Claim Rejected', color: 'bg-red-100 text-red-800' },
+  { value: 'Claim Denied', label: 'Claim Denied', color: 'bg-red-200 text-red-900' },
+  { value: 'Needs Resubmit', label: 'Needs Resubmit', color: 'bg-orange-100 text-orange-800' },
+  { value: 'Resubmitted', label: 'Resubmitted', color: 'bg-amber-100 text-amber-800' },
+  { value: 'Partial Payment', label: 'Partial Payment', color: 'bg-teal-100 text-teal-800' },
+  { value: 'Paid in Full', label: 'Paid in Full', color: 'bg-green-200 text-green-900' },
+] as const;
+
 // Document Categories
 export const DOCUMENT_CATEGORIES = [
   { value: 'Lab Results', label: 'Lab Results', icon: '🧪', color: 'bg-teal-100 text-teal-800' },
@@ -93,6 +109,12 @@ export function getStatusColor(status: string): string {
 // Helper function to get accessioning status color
 export function getAccessioningStatusColor(status: string): string {
   const statusOption = ACCESSIONING_STATUS_OPTIONS.find(opt => opt.value === status);
+  return statusOption?.color || 'bg-gray-100 text-gray-800';
+}
+
+// Helper function to get billing status color
+export function getBillingStatusColor(status: string): string {
+  const statusOption = BILLING_STATUS_OPTIONS.find(opt => opt.value === status);
   return statusOption?.color || 'bg-gray-100 text-gray-800';
 }
 

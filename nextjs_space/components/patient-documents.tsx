@@ -225,6 +225,7 @@ export function PatientDocuments({ patientId, documents, onDocumentsUpdate }: Pa
                 <TableHead className="w-12"></TableHead>
                 <TableHead>File Name</TableHead>
                 <TableHead>Document Type</TableHead>
+                <TableHead>Uploaded By</TableHead>
                 <TableHead>Uploaded</TableHead>
                 <TableHead>Size</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -241,6 +242,9 @@ export function PatientDocuments({ patientId, documents, onDocumentsUpdate }: Pa
                   </TableCell>
                   <TableCell>
                     {document?.document_category && getCategoryBadge(document?.document_category)}
+                  </TableCell>
+                  <TableCell className="text-sm text-gray-600">
+                    {(document as any)?.uploader?.full_name || (document as any)?.uploader?.username || 'Unknown'}
                   </TableCell>
                   <TableCell className="text-sm text-gray-600">
                     {document?.uploaded_at && format(new Date(document?.uploaded_at), 'MMM d, yyyy')}

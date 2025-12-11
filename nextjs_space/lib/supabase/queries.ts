@@ -205,14 +205,40 @@ export async function deleteTest(testId: string) {
 // =====================================================
 
 export async function getDocumentsByPatientId(patientId: string) {
-  const { data, error } = await supabase
+  // Fetch documents
+  const { data: documents, error: docsError } = await supabase
     .from('documents')
     .select('*')
     .eq('patient_id', patientId)
     .order('uploaded_at', { ascending: false });
-  
-  if (error) throw error;
-  return data as Document[];
+
+  if (docsError) throw docsError;
+  if (!documents || documents.length === 0) return [];
+
+  // Get unique uploader IDs
+  const uploaderIds = [...new Set(documents.map(d => d.uploaded_by).filter(Boolean))];
+
+  // Fetch uploader information
+  const { data: uploaders, error: usersError } = await supabase
+    .from('users')
+    .select('id, username, full_name')
+    .in('id', uploaderIds);
+
+  if (usersError) {
+    console.error('Error fetching uploaders:', usersError);
+    return documents as Document[];
+  }
+
+  // Create a map of uploader info
+  const uploaderMap = new Map(uploaders?.map(u => [u.id, u]) || []);
+
+  // Enrich documents with uploader info
+  const enrichedDocs = documents.map(doc => ({
+    ...doc,
+    uploader: doc.uploaded_by ? uploaderMap.get(doc.uploaded_by) : null
+  }));
+
+  return enrichedDocs as any[];
 }
 
 export async function getDocumentsByTestId(testId: string) {

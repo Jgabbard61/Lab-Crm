@@ -92,6 +92,13 @@ export interface Test {
   deductible?: number;
   mr?: string;
   correction_requests?: string;
+
+  // Detailed Billing Workflow
+  billing_status?: 'Not Billed' | 'Ready to Bill' | 'Sent to Payer' | 'Received by Payer' | 'Under Review' | 'Claim Accepted' | 'Claim Rejected' | 'Claim Denied' | 'Needs Resubmit' | 'Resubmitted' | 'Partial Payment' | 'Paid in Full';
+  billing_notes?: string;
+  initial_bill_date?: string;
+  last_resubmit_date?: string;
+  resubmit_count?: number;
   created_at: string;
   updated_at: string;
   created_by?: string;

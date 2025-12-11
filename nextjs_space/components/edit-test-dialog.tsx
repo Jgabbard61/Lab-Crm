@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Save, Package, CheckCircle, Beaker, DollarSign, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Test } from '@/lib/supabase/client';
-import { TEST_STATUS_OPTIONS, KIT_SHIPMENT_STATUS_OPTIONS, ACCESSIONING_STATUS_OPTIONS, TEST_TYPES } from '@/lib/constants';
+import { TEST_STATUS_OPTIONS, KIT_SHIPMENT_STATUS_OPTIONS, ACCESSIONING_STATUS_OPTIONS, BILLING_STATUS_OPTIONS, TEST_TYPES } from '@/lib/constants';
 
 interface EditTestDialogProps {
   open: boolean;
@@ -50,11 +50,18 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
   const [sentToLabDate, setSentToLabDate] = useState('');
   const [resultsReceivedDate, setResultsReceivedDate] = useState('');
   
-  // Billing
+  // Billing - Financial
   const [charges, setCharges] = useState('');
   const [paid, setPaid] = useState('');
   const [patientResponsibility, setPatientResponsibility] = useState('');
   const [dedCoins, setDedCoins] = useState('');
+
+  // Billing - Workflow
+  const [billingStatus, setBillingStatus] = useState('Not Billed');
+  const [billingNotes, setBillingNotes] = useState('');
+  const [initialBillDate, setInitialBillDate] = useState('');
+  const [lastResubmitDate, setLastResubmitDate] = useState('');
+  const [resubmitCount, setResubmitCount] = useState('');
 
   useEffect(() => {
     if (test) {
@@ -81,6 +88,12 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
       setPaid(test.paid?.toString() || '');
       setPatientResponsibility(test.patient_responsibility?.toString() || '');
       setDedCoins(test.ded_coins?.toString() || '');
+
+      setBillingStatus(test.billing_status || 'Not Billed');
+      setBillingNotes(test.billing_notes || '');
+      setInitialBillDate(test.initial_bill_date || '');
+      setLastResubmitDate(test.last_resubmit_date || '');
+      setResubmitCount(test.resubmit_count?.toString() || '0');
     }
   }, [test]);
 
@@ -125,6 +138,12 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
           paid: paid ? parseFloat(paid) : null,
           patient_responsibility: patientResponsibility ? parseFloat(patientResponsibility) : null,
           ded_coins: dedCoins ? parseFloat(dedCoins) : null,
+
+          billing_status: billingStatus || null,
+          billing_notes: billingNotes || null,
+          initial_bill_date: initialBillDate || null,
+          last_resubmit_date: lastResubmitDate || null,
+          resubmit_count: resubmitCount ? parseInt(resubmitCount) : 0,
         }),
       });
 
@@ -385,54 +404,125 @@ export function EditTestDialog({ open, onClose, test, onTestUpdated }: EditTestD
             </TabsContent>
 
             {/* Billing Tab */}
-            <TabsContent value="billing" className="space-y-4 pt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Charges</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    value={charges} 
-                    onChange={(e) => setCharges(e.target.value)} 
-                    placeholder="0.00"
-                    disabled={loading} 
-                  />
-                </div>
+            <TabsContent value="billing" className="space-y-6 pt-4">
+              {/* Billing Workflow Status */}
+              <div className="space-y-4 pb-4 border-b">
+                <h3 className="font-semibold text-gray-900">Billing Workflow</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 space-y-2">
+                    <Label>Billing Status *</Label>
+                    <Select value={billingStatus} onValueChange={setBillingStatus} disabled={loading}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BILLING_STATUS_OPTIONS.map((status) => (
+                          <SelectItem key={status.value} value={status.value}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">Track the current status of the billing process</p>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Paid Amount</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    value={paid} 
-                    onChange={(e) => setPaid(e.target.value)} 
-                    placeholder="0.00"
-                    disabled={loading} 
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label>Initial Bill Date</Label>
+                    <Input
+                      type="date"
+                      value={initialBillDate}
+                      onChange={(e) => setInitialBillDate(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Patient Responsibility</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    value={patientResponsibility} 
-                    onChange={(e) => setPatientResponsibility(e.target.value)} 
-                    placeholder="0.00"
-                    disabled={loading} 
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label>Last Resubmit Date</Label>
+                    <Input
+                      type="date"
+                      value={lastResubmitDate}
+                      onChange={(e) => setLastResubmitDate(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Ded/CoIns</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    value={dedCoins} 
-                    onChange={(e) => setDedCoins(e.target.value)} 
-                    placeholder="0.00"
-                    disabled={loading} 
-                  />
+                  <div className="col-span-2 space-y-2">
+                    <Label>Resubmit Count</Label>
+                    <Input
+                      type="number"
+                      value={resubmitCount}
+                      onChange={(e) => setResubmitCount(e.target.value)}
+                      placeholder="0"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="col-span-2 space-y-2">
+                    <Label>Billing Notes</Label>
+                    <Textarea
+                      value={billingNotes}
+                      onChange={(e) => setBillingNotes(e.target.value)}
+                      placeholder="Add notes about billing issues, resubmission reasons, insurance correspondence, etc..."
+                      rows={4}
+                      disabled={loading}
+                      className="resize-none"
+                    />
+                    <p className="text-xs text-gray-500">Document billing issues, denial reasons, resubmission details</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Information */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-900">Financial Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Charges</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={charges}
+                      onChange={(e) => setCharges(e.target.value)}
+                      placeholder="0.00"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Paid Amount</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={paid}
+                      onChange={(e) => setPaid(e.target.value)}
+                      placeholder="0.00"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Patient Responsibility</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={patientResponsibility}
+                      onChange={(e) => setPatientResponsibility(e.target.value)}
+                      placeholder="0.00"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Ded/CoIns</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={dedCoins}
+                      onChange={(e) => setDedCoins(e.target.value)}
+                      placeholder="0.00"
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
               </div>
             </TabsContent>
